@@ -118,6 +118,7 @@ export default function OutfitsScreen({ navigation }) {
         <TouchableOpacity
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           accessibilityLabel="Help"
+          onPress={() => navigation.navigate('Help')}
         >
           <Ionicons name="help-circle-outline" size={22} color={COLORS.textDark} />
         </TouchableOpacity>

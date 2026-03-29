@@ -35,6 +35,7 @@ import OutfitsScreen      from '../screens/OutfitsScreen';
 import OutfitDetailScreen from '../screens/OutfitDetailScreen';
 import EventsScreen       from '../screens/EventsScreen';
 import EventDetailScreen  from '../screens/EventDetailScreen';
+import HelpScreen         from '../screens/HelpScreen';
 
 const Tab   = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -173,10 +174,19 @@ function MainTabs() {
 }
 
 // ── Root Navigator ────────────────────────────
+function RootStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Main" component={MainTabs} />
+      <Stack.Screen name="Help" component={HelpScreen} />
+    </Stack.Navigator>
+  );
+}
+
 export default function AppNavigator() {
   return (
     <NavigationContainer>
-      <MainTabs />
+      <RootStack />
     </NavigationContainer>
   );
 }
