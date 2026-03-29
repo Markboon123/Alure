@@ -33,7 +33,7 @@ export default function SignUpScreen({ navigation }) {
   async function handleSignUp() {
     if (!canSubmit) return;
     setLoading(true);
-    await login({ name: name.trim(), email: email.trim() });
+    await login({ name: name.trim(), email: email.trim(), isNewUser: true });
     setLoading(false);
   }
 

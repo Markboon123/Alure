@@ -22,8 +22,11 @@ import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { saveItem } from '../services/storageService';
 import { analyzeClothingImage } from '../services/geminiService';
+import { useAuth } from '../context/AuthContext';
 
-export default function AddItemScreen({ navigation }) {
+export default function AddItemScreen({ navigation, route }) {
+  const { user, login } = useAuth();
+  const isOnboarding = route.params?.isOnboarding === true;
   const [itemName,     setItemName]     = useState('');
   const [pickedImage,  setPickedImage]  = useState(null);
   const [urlInput,     setUrlInput]     = useState('');
@@ -153,9 +156,13 @@ export default function AddItemScreen({ navigation }) {
         addedAt:   new Date().toISOString(),
       };
       await saveItem(newItem);
-      Alert.alert('Added!', `"${newItem.name}" has been added to your closet.`, [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      if (isOnboarding) {
+        await login({ ...user, isNewUser: false });
+      } else {
+        Alert.alert('Added!', `"${newItem.name}" has been added to your closet.`, [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      }
     } catch (err) {
       console.error('handleAddItem error:', err);
       Alert.alert('Error', 'Failed to save item. Please try again.');
@@ -169,12 +176,30 @@ export default function AddItemScreen({ navigation }) {
 
       {/* ── Header ── */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Text style={styles.cancelText}>Cancel</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>ADD ITEM</Text>
-        <View style={{ width: 60 }} />
+        {isOnboarding ? (
+          <View style={{ width: 60 }} />
+        ) : (
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
+        )}
+        <Text style={styles.headerTitle}>
+          {isOnboarding ? 'BUILD YOUR CLOSET' : 'ADD ITEM'}
+        </Text>
+        {isOnboarding ? (
+          <TouchableOpacity onPress={() => login({ ...user, isNewUser: false })} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={styles.cancelText}>Skip</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 60 }} />
+        )}
       </View>
+
+      {isOnboarding && (
+        <Text style={styles.onboardingSubtitle}>
+          Add your first piece to get personalised outfit suggestions
+        </Text>
+      )}
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -329,6 +354,14 @@ const styles = StyleSheet.create({
     fontSize:   FONTS.sizeMD,
     color:      COLORS.primary,
     width:      60,
+  },
+
+  onboardingSubtitle: {
+    fontFamily:        FONTS.regular,
+    fontSize:          FONTS.sizeMD,
+    color:             COLORS.textMedium,
+    paddingHorizontal: SPACING.lg,
+    marginBottom:      SPACING.sm,
   },
 
   headerTitle: {

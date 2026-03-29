@@ -155,16 +155,22 @@ function RootStack() {
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {user ? (
+      {!user ? (
+        <>
+          <Stack.Screen name="Login"  component={LoginScreen} />
+          <Stack.Screen name="SignUp" component={SignUpScreen} />
+        </>
+      ) : user.isNewUser ? (
+        <Stack.Screen
+          name="OnboardingAddItem"
+          component={AddItemScreen}
+          initialParams={{ isOnboarding: true }}
+        />
+      ) : (
         <>
           <Stack.Screen name="Main"     component={MainTabs} />
           <Stack.Screen name="Help"     component={HelpScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
-        </>
-      ) : (
-        <>
-          <Stack.Screen name="Login"  component={LoginScreen} />
-          <Stack.Screen name="SignUp" component={SignUpScreen} />
         </>
       )}
     </Stack.Navigator>

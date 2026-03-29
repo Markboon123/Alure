@@ -47,7 +47,7 @@ export default function EventsScreen({ navigation }) {
         accessibilityLabel={`View event: ${event.name}`}
       >
         <Image
-          source={{ uri: event.imageUri }}
+          source={event.imageSource || { uri: event.imageUri }}
           style={styles.eventThumb}
           resizeMode="cover"
         />

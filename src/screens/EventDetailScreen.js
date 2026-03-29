@@ -3,7 +3,7 @@
 // Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,13 @@ import {
   ScrollView,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { getAllItems } from '../services/storageService';
+import { generateOutfitFromPrompt } from '../services/geminiService';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -29,6 +32,40 @@ const CATEGORY_STYLE = {
 export default function EventDetailScreen({ route, navigation }) {
   const { event } = route.params;
   const catStyle = CATEGORY_STYLE[event.category] || CATEGORY_STYLE.Casual;
+  const [generating, setGenerating] = useState(false);
+
+  async function handleIllGo() {
+    setGenerating(true);
+    try {
+      const items = await getAllItems();
+      const prompt = `${event.name}. ${event.description} Dress code: ${event.dressCode}.`;
+      const suggestions = await generateOutfitFromPrompt({ items, prompt, outfitCount: 3 });
+
+      const outfits = suggestions.map((s, idx) => ({
+        id:         `event_outfit_${Date.now()}_${idx}`,
+        name:       s.name,
+        tags:       s.tags,
+        itemIds:    s.itemIds,
+        style:      s.style,
+        isFavorite: false,
+        wornDates:  [],
+        aiScore:    0.9,
+        reason:     s.reason,
+      }));
+
+      navigation.navigate('Discover', {
+        screen: 'DiscoverHome',
+        params: {
+          theme:           event.name.toUpperCase(),
+          generatedOutfits: outfits,
+        },
+      });
+    } catch (err) {
+      console.error('handleIllGo error:', err);
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -40,7 +77,7 @@ export default function EventDetailScreen({ route, navigation }) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
         <Image
-          source={{ uri: event.imageUri }}
+          source={event.imageSource || { uri: event.imageUri }}
           style={styles.heroImage}
           resizeMode="cover"
         />
@@ -67,8 +104,19 @@ export default function EventDetailScreen({ route, navigation }) {
           )}
         </View>
 
-        <TouchableOpacity style={styles.ctaBtn}>
-          <Text style={styles.ctaBtnText}>I'll Go (Coming Soon)</Text>
+        <TouchableOpacity
+          style={[styles.ctaBtn, generating && styles.ctaBtnLoading]}
+          onPress={handleIllGo}
+          disabled={generating}
+        >
+          {generating ? (
+            <View style={styles.ctaLoadingRow}>
+              <ActivityIndicator color={COLORS.white} size="small" />
+              <Text style={styles.ctaBtnText}>Styling your outfit...</Text>
+            </View>
+          ) : (
+            <Text style={styles.ctaBtnText}>I'll Go — Style Me ✦</Text>
+          )}
         </TouchableOpacity>
 
       </ScrollView>
@@ -181,9 +229,20 @@ const styles = StyleSheet.create({
     ...SHADOW.medium,
   },
 
+  ctaBtnLoading: {
+    opacity: 0.8,
+  },
+
+  ctaLoadingRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           SPACING.sm,
+  },
+
   ctaBtnText: {
-    fontFamily: FONTS.bold,
-    fontSize:   FONTS.sizeMD,
-    color:      COLORS.white,
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeMD,
+    color:         COLORS.white,
+    letterSpacing: 0.5,
   },
 });
