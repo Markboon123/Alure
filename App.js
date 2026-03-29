@@ -14,7 +14,7 @@ console.warn = (...args) => {
 };
 
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFonts } from 'expo-font';
 import {
@@ -28,7 +28,7 @@ import {
 
 import AppNavigator          from './src/navigation/AppNavigator';
 import { initializeStorage } from './src/services/storageService';
-import { COLORS }            from './src/constants/theme';
+import { COLORS, FONTS }     from './src/constants/theme';
 
 export default function App() {
   const [storageReady, setStorageReady] = useState(false);
@@ -50,7 +50,8 @@ export default function App() {
   if (!storageReady) {
     return (
       <View style={styles.splash}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.brand}>ALURÉ</Text>
+        <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: 24 }} />
       </View>
     );
   }
@@ -71,5 +72,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     alignItems:      'center',
     justifyContent:  'center',
+  },
+
+  brand: {
+    fontFamily:    FONTS.brand,
+    fontSize:      42,
+    letterSpacing: 10,
+    color:         COLORS.textDark,
   },
 });
