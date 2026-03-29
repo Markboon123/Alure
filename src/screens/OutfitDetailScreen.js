@@ -197,13 +197,6 @@ export default function OutfitDetailScreen({ route, navigation }) {
         {/* ── Previously worn stats ── */}
         <View style={styles.sectionRow}>
           <Text style={styles.sectionLabel}>PREVIOUSLY WORN</Text>
-          {/* Prominent wear count badge */}
-          <View style={styles.wearCountBadge}>
-            <Text style={styles.wearCountNumber}>{wearCount}</Text>
-            <Text style={styles.wearCountUnit}>
-              {wearCount === 1 ? 'wear' : 'wears'}
-            </Text>
-          </View>
         </View>
 
         <View style={styles.statRow}>
@@ -227,14 +220,6 @@ export default function OutfitDetailScreen({ route, navigation }) {
           <Ionicons name="heart-outline" size={18} color={COLORS.white} style={{ marginRight: 8 }} />
           <Text style={styles.wearBtnText}>I'M WEARING THIS</Text>
         </TouchableOpacity>
-
-        {/* ── Wear again (shown only after first wear) ── */}
-        {wearCount > 0 && (
-          <TouchableOpacity style={styles.wearAgainBtn} onPress={handleWearIt}>
-            <Ionicons name="refresh-outline" size={16} color={COLORS.primary} style={{ marginRight: 6 }} />
-            <Text style={styles.wearAgainBtnText}>I'M WEARING THIS AGAIN</Text>
-          </TouchableOpacity>
-        )}
 
         {/* ── Delete outfit ── */}
         <TouchableOpacity style={styles.deleteBtn} onPress={handleRemove}>

@@ -26,7 +26,7 @@ import { COLORS }            from './src/constants/theme';
 export default function App() {
   const [storageReady, setStorageReady] = useState(false);
 
-  const [fontsLoaded, fontError] = useFonts({
+  useFonts({
     CormorantGaramond_600SemiBold,
     Jost_400Regular,
     Jost_500Medium,
@@ -39,8 +39,8 @@ export default function App() {
       .catch(() => setStorageReady(true));
   }, []);
 
-  // Allow app to open even if fonts fail to load
-  if (!storageReady || (!fontsLoaded && !fontError)) {
+  // Only block on storage — fonts load in background, app opens regardless
+  if (!storageReady) {
     return (
       <View style={styles.splash}>
         <ActivityIndicator size="large" color={COLORS.primary} />

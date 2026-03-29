@@ -7,18 +7,16 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  ScrollView,
   TouchableOpacity,
   Image,
   StyleSheet,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { MOCK_EVENTS } from '../data/mockData';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const CATEGORY_STYLE = {
   Culture:   { bg: COLORS.cultureBadge,   text: COLORS.cultureText },
@@ -27,28 +25,16 @@ const CATEGORY_STYLE = {
   Casual:    { bg: COLORS.casualBadge,    text: COLORS.casualText },
 };
 
-const BUCKETS = [
-  { key: 'tonight', label: 'Tonight' },
+const WEEKEND_TABS = [
   { key: 'weekend', label: 'This Weekend' },
   { key: 'week',    label: 'This Week' },
 ];
 
 export default function EventsScreen({ navigation }) {
-  const [activeBucket, setActiveBucket] = useState(null);
+  const [weekendTab, setWeekendTab] = useState('weekend');
 
-  const events = MOCK_EVENTS;
-
-  function renderSection(bucket) {
-    const sectionEvents = events.filter(e => e.bucket === bucket.key);
-    if (sectionEvents.length === 0) return null;
-
-    return (
-      <View key={bucket.key} style={styles.section}>
-        <Text style={styles.sectionLabel}>{bucket.label.toUpperCase()}</Text>
-        {sectionEvents.map(event => renderEventCard(event))}
-      </View>
-    );
-  }
+  const tonightEvents = MOCK_EVENTS.filter(e => e.bucket === 'tonight');
+  const mainEvents    = MOCK_EVENTS.filter(e => e.bucket === weekendTab);
 
   function renderEventCard(event) {
     const catStyle = CATEGORY_STYLE[event.category] || CATEGORY_STYLE.Casual;
@@ -78,7 +64,7 @@ export default function EventsScreen({ navigation }) {
           <Text style={styles.eventLocation}>{event.location}</Text>
         </View>
 
-        <Text style={styles.eventArrow}>›</Text>
+        <Ionicons name="chevron-forward" size={18} color={COLORS.textLight} style={styles.arrow} />
       </TouchableOpacity>
     );
   }
@@ -86,55 +72,59 @@ export default function EventsScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
 
-      {/* ── Hero header ── */}
-      <View style={styles.heroHeader}>
-        <Text style={styles.heroTitle}>EVENTS{'\n'}NEAR YOU</Text>
-      </View>
-
-      {/* ── Bucket filter tabs ── */}
-      <View style={styles.bucketRow}>
+      {/* ── Top nav bar ── */}
+      <View style={styles.topBar}>
         <TouchableOpacity
-          style={[styles.bucketTab, !activeBucket && styles.bucketTabActive]}
-          onPress={() => setActiveBucket(null)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Settings"
         >
-          <Text style={[styles.bucketTabText, !activeBucket && styles.bucketTabTextActive]}>
-            All
-          </Text>
+          <Ionicons name="settings-outline" size={22} color={COLORS.textDark} />
         </TouchableOpacity>
-        {BUCKETS.map(b => (
-          <TouchableOpacity
-            key={b.key}
-            style={[styles.bucketTab, activeBucket === b.key && styles.bucketTabActive]}
-            onPress={() => setActiveBucket(prev => prev === b.key ? null : b.key)}
-          >
-            <Text style={[
-              styles.bucketTabText,
-              activeBucket === b.key && styles.bucketTabTextActive,
-            ]}>
-              {b.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+
+        <Text style={styles.brandName}>ALURÉ</Text>
+
+        <TouchableOpacity
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Help"
+        >
+          <Ionicons name="help-circle-outline" size={22} color={COLORS.textDark} />
+        </TouchableOpacity>
       </View>
 
-      {/* ── Events list ── */}
-      <FlatList
-        data={activeBucket ? [activeBucket] : BUCKETS.map(b => b.key)}
-        keyExtractor={k => k}
-        renderItem={({ item: bucketKey }) => {
-          if (activeBucket) {
-            return (
-              <View style={styles.flatSection}>
-                {events.filter(e => e.bucket === bucketKey).map(renderEventCard)}
-              </View>
-            );
-          }
-          const bucket = BUCKETS.find(b => b.key === bucketKey);
-          return bucket ? renderSection(bucket) : null;
-        }}
-        contentContainerStyle={styles.listContent}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-      />
+      >
+
+        {/* ── Hero header ── */}
+        <Text style={styles.heroTitle}>Events Near You</Text>
+
+        {/* ── Tonight section ── */}
+        {tonightEvents.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>TONIGHT</Text>
+            {tonightEvents.map(renderEventCard)}
+          </View>
+        )}
+
+        {/* ── Weekend / Week toggle section ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            {WEEKEND_TABS.map(tab => (
+              <TouchableOpacity key={tab.key} onPress={() => setWeekendTab(tab.key)}>
+                <Text style={[
+                  styles.sectionLabel,
+                  weekendTab !== tab.key && styles.sectionLabelInactive,
+                ]}>
+                  {tab.label.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {mainEvents.map(renderEventCard)}
+        </View>
+
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -142,105 +132,92 @@ export default function EventsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex:            1,
-    backgroundColor: COLORS.black,
+    backgroundColor: COLORS.background,
   },
 
-  heroHeader: {
+  scrollContent: {
     paddingHorizontal: SPACING.lg,
-    paddingTop:        SPACING.lg,
-    paddingBottom:     SPACING.md,
+    paddingTop:        SPACING.sm,
+    paddingBottom:     SPACING.xxl + 40,
+  },
+
+  topBar: {
+    flexDirection:     'row',
+    justifyContent:    'space-between',
+    alignItems:        'center',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical:   SPACING.sm + 2,
+  },
+
+  brandName: {
+    fontFamily:    FONTS.brand,
+    fontSize:      22,
+    letterSpacing: 5,
+    color:         COLORS.textDark,
   },
 
   heroTitle: {
-    fontFamily:    FONTS.bold,
-    fontSize:      FONTS.size3XL * 1.1,
-    color:         COLORS.white,
-    lineHeight:    FONTS.size3XL * 1.2,
-    letterSpacing: 1,
-  },
-
-  bucketRow: {
-    flexDirection:     'row',
-    paddingHorizontal: SPACING.lg,
-    gap:               SPACING.sm,
-    marginBottom:      SPACING.md,
-    flexWrap:          'wrap',
-  },
-
-  bucketTab: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical:   SPACING.xs,
-    borderRadius:      RADIUS.full,
-    backgroundColor:   'rgba(255,255,255,0.1)',
-  },
-
-  bucketTabActive: {
-    backgroundColor: COLORS.white,
-  },
-
-  bucketTabText: {
-    fontFamily: FONTS.bold,
-    fontSize:   FONTS.sizeSM,
-    color:      'rgba(255,255,255,0.7)',
-  },
-
-  bucketTabTextActive: {
-    color: COLORS.black,
-  },
-
-  listContent: {
-    paddingHorizontal: SPACING.lg,
-    paddingBottom:     SPACING.xxl,
-  },
-
-  section: {
+    fontFamily:   FONTS.medium,
+    fontSize:     34,
+    color:        COLORS.textDark,
     marginBottom: SPACING.lg,
   },
 
-  flatSection: {
-    gap: SPACING.sm,
+  section: {
+    marginBottom: SPACING.xl,
+  },
+
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    gap:           SPACING.lg,
+    marginBottom:  SPACING.sm,
   },
 
   sectionLabel: {
     fontFamily:    FONTS.bold,
     fontSize:      FONTS.sizeSM,
-    color:         'rgba(255,255,255,0.5)',
+    color:         COLORS.textDark,
     letterSpacing: 2,
     marginBottom:  SPACING.sm,
+  },
+
+  sectionLabelInactive: {
+    color: COLORS.textLight,
   },
 
   eventCard: {
     flexDirection:   'row',
     alignItems:      'center',
-    backgroundColor: COLORS.white,
-    borderRadius:    RADIUS.md,
+    backgroundColor: COLORS.cardBackground,
+    borderRadius:    RADIUS.lg,
     overflow:        'hidden',
     marginBottom:    SPACING.sm,
     ...SHADOW.small,
   },
 
   eventThumb: {
-    width:  100,
-    height: 90,
+    width:  110,
+    height: 95,
   },
 
   eventContent: {
     flex:    1,
-    padding: SPACING.sm,
-    gap:     SPACING.xs,
+    padding: SPACING.md,
+    gap:     3,
   },
 
   categoryBadge: {
     alignSelf:         'flex-start',
     borderRadius:      RADIUS.full,
     paddingHorizontal: SPACING.sm,
-    paddingVertical:   2,
+    paddingVertical:   3,
+    marginBottom:      2,
   },
 
   categoryText: {
     fontFamily:    FONTS.bold,
-    fontSize:      FONTS.sizeXS,
-    letterSpacing: 0.5,
+    fontSize:      9,
+    letterSpacing: 0.6,
   },
 
   eventName: {
@@ -261,9 +238,7 @@ const styles = StyleSheet.create({
     color:      COLORS.textLight,
   },
 
-  eventArrow: {
-    fontSize:     FONTS.sizeXL,
-    color:        COLORS.textLight,
-    paddingRight: SPACING.sm,
+  arrow: {
+    paddingRight: SPACING.md,
   },
 });
