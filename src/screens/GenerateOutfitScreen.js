@@ -170,6 +170,16 @@ export default function GenerateOutfitScreen({ navigation }) {
           {loading && (
             <Text style={styles.loadingHint}>Styling your look...</Text>
           )}
+
+          {/* ── Today's Outfits shortcut ── */}
+          <TouchableOpacity
+            style={styles.todayButton}
+            onPress={() => navigation.navigate('DiscoverHome', { theme: null, generatedOutfits: null })}
+            accessibilityLabel="Show today's outfits"
+          >
+            <Ionicons name="sunny-outline" size={16} color={COLORS.textMedium} />
+            <Text style={styles.todayButtonText}>Show Today's Outfits</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -319,5 +329,23 @@ const styles = StyleSheet.create({
     fontStyle:  'italic',
     textAlign:  'center',
     marginTop:  SPACING.md,
+  },
+
+  todayButton: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            SPACING.sm,
+    marginTop:      SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderRadius:   RADIUS.lg,
+    borderWidth:    1.5,
+    borderColor:    COLORS.primaryLight,
+  },
+
+  todayButtonText: {
+    fontFamily: FONTS.medium,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.textMedium,
   },
 });
