@@ -213,7 +213,7 @@ export default function DiscoverScreen({ navigation, route }) {
 
       {/* ── Top Nav Bar — matches ClosetScreen ── */}
       <View style={styles.topBar}>
-        <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel="Settings">
+        <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel="Settings" onPress={() => navigation.navigate('Settings')}>
           <Ionicons name="settings-outline" size={22} color={COLORS.textDark} />
         </TouchableOpacity>
         <Text style={styles.brandName}>ALURÉ</Text>

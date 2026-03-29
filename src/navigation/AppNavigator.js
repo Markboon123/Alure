@@ -4,8 +4,8 @@
 // with a custom bottom tab bar
 // ─────────────────────────────────────────────
 
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { COLORS, FONTS, SPACING } from '../constants/theme';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 
 // ── Screens ───────────────────────────────────
 import DiscoverScreen       from '../screens/DiscoverScreen';
@@ -25,6 +26,9 @@ import OutfitDetailScreen   from '../screens/OutfitDetailScreen';
 import EventsScreen         from '../screens/EventsScreen';
 import EventDetailScreen    from '../screens/EventDetailScreen';
 import HelpScreen           from '../screens/HelpScreen';
+import LoginScreen          from '../screens/LoginScreen';
+import SignUpScreen         from '../screens/SignUpScreen';
+import SettingsScreen       from '../screens/SettingsScreen';
 
 const TopTab = createMaterialTopTabNavigator();
 const Stack  = createStackNavigator();
@@ -139,19 +143,41 @@ function MainTabs() {
 
 // ── Root Navigator ────────────────────────────
 function RootStack() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={COLORS.primary} size="large" />
+      </View>
+    );
+  }
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Main" component={MainTabs} />
-      <Stack.Screen name="Help" component={HelpScreen} />
+      {user ? (
+        <>
+          <Stack.Screen name="Main"     component={MainTabs} />
+          <Stack.Screen name="Help"     component={HelpScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+        </>
+      ) : (
+        <>
+          <Stack.Screen name="Login"  component={LoginScreen} />
+          <Stack.Screen name="SignUp" component={SignUpScreen} />
+        </>
+      )}
     </Stack.Navigator>
   );
 }
 
 export default function AppNavigator() {
   return (
-    <NavigationContainer>
-      <RootStack />
-    </NavigationContainer>
+    <AuthProvider>
+      <NavigationContainer>
+        <RootStack />
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
 

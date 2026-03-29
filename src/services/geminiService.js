@@ -8,10 +8,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// ⚠️  Replace with your actual Gemini API key.
-// In production, store this in an environment variable
-// and never commit it to source control.
-const GEMINI_API_KEY = 'AIzaSyB4BKjVQj1BNbRB9XU7PBDXDQE5-zkVGMA';
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
