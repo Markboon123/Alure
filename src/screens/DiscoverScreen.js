@@ -26,13 +26,7 @@ import { suggestOutfits, fetchWeather } from '../services/geminiService';
 import { MOCK_OUTFITS } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
 
-const SCREEN_WIDTH  = Dimensions.get('window').width;
-// Mirror OutfitCard's sizing so we can fix the carousel height
-const CARD_WIDTH    = SCREEN_WIDTH - SPACING.lg * 2;
-const CELL_SIZE     = (CARD_WIDTH - SPACING.sm * 3) / 2 - 10;
-// card padding(16) + tags+margin(32) + grid(2*cell+gap) + action+margin(44)
-const CARD_HEIGHT   = 16 + 32 + (2 * CELL_SIZE + SPACING.sm) + 44;
-const CAROUSEL_HEIGHT = CARD_HEIGHT + 24; // 24 = dots row
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function DiscoverScreen({ navigation, route }) {
   const { user } = useAuth();
@@ -132,6 +126,10 @@ export default function DiscoverScreen({ navigation, route }) {
   function handleScroll(event) {
     const offsetX = event.nativeEvent.contentOffset.x;
     const newIndex = Math.round(offsetX / SCREEN_WIDTH);
+    if (newIndex !== activeIndex) {
+      setThumbsUpActive(false);
+      setThumbsDownActive(false);
+    }
     setActiveIndex(newIndex);
   }
 
@@ -164,10 +162,16 @@ export default function DiscoverScreen({ navigation, route }) {
 
   function handleThumbsUp() {
     const outfit = outfits[activeIndex];
-    const newLiked = outfit?.tags ? [...feedbackLiked, ...outfit.tags] : feedbackLiked;
-    setFeedbackLiked(newLiked);
-    setThumbsUpActive(true);
-    setThumbsDownActive(false);
+    if (thumbsUpActive) {
+      const tagsToRemove = new Set(outfit?.tags || []);
+      setFeedbackLiked(prev => prev.filter(t => !tagsToRemove.has(t)));
+      setThumbsUpActive(false);
+    } else {
+      const newLiked = outfit?.tags ? [...feedbackLiked, ...outfit.tags] : feedbackLiked;
+      setFeedbackLiked(newLiked);
+      setThumbsUpActive(true);
+      setThumbsDownActive(false);
+    }
   }
 
   async function handleSave() {
@@ -210,7 +214,7 @@ export default function DiscoverScreen({ navigation, route }) {
 
   function renderCard({ item: outfit }) {
     return (
-      <View style={{ width: SCREEN_WIDTH, paddingHorizontal: SPACING.lg }}>
+      <View style={{ width: SCREEN_WIDTH, paddingHorizontal: SPACING.lg, flex: 1 }}>
         <OutfitCard
           outfit={outfit}
           items={items}
@@ -239,9 +243,9 @@ export default function DiscoverScreen({ navigation, route }) {
       {/* ── Header ── */}
       <View style={styles.header}>
         {generatedTheme ? (
-          /* Generated theme: single block with sparkle */
+          /* Generated theme: text grows downward, button stays anchored top-right */
           <View style={styles.headerBottomRow}>
-            <Text style={styles.headlineText} numberOfLines={3}>{generatedTheme}</Text>
+            <Text style={styles.themeText}>{generatedTheme}</Text>
             <TouchableOpacity
               style={styles.sparkleButton}
               onPress={() => navigation.navigate('GenerateOutfit')}
@@ -380,13 +384,24 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: SPACING.lg,
     paddingTop:        SPACING.xs,
-    paddingBottom:     SPACING.xs,
+    paddingBottom:     SPACING.md,
   },
 
   headerBottomRow: {
     flexDirection:  'row',
-    alignItems:     'center',
+    alignItems:     'flex-start',
     justifyContent: 'space-between',
+  },
+
+  themeText: {
+    flex:          1,
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.size2XL,
+    color:         COLORS.textDark,
+    lineHeight:    FONTS.size2XL * 1.1,
+    letterSpacing: 1,
+    marginRight:   SPACING.sm,
+    paddingTop:    4,
   },
 
   hiText: {
@@ -462,7 +477,7 @@ const styles = StyleSheet.create({
 
   // ── Carousel ──
   carouselArea: {
-    height: CAROUSEL_HEIGHT,
+    flex: 1,
   },
 
   dotsRow: {
@@ -486,7 +501,7 @@ const styles = StyleSheet.create({
   },
 
   carousel: {
-    flexGrow: 0,
+    flex: 1,
   },
 
   // ── Feedback row ──

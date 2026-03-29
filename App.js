@@ -6,6 +6,13 @@
 
 import 'react-native-gesture-handler';
 
+// Suppress the Google Generative AI client-side key warning (intentional for demo)
+const _warn = console.warn.bind(console);
+console.warn = (...args) => {
+  if (typeof args[0] === 'string' && args[0].includes('API key')) return;
+  _warn(...args);
+};
+
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';

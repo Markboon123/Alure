@@ -82,7 +82,7 @@ export default function OutfitCard({
 
 function ClothingCell({ item, size }) {
   return (
-    <View style={[styles.cell, { width: size, height: size }]}>
+    <View style={[styles.cell, { width: size }]}>
       {item ? (
         <Image
           source={{ uri: item.imageUri }}
@@ -98,9 +98,10 @@ function ClothingCell({ item, size }) {
 
 const styles = StyleSheet.create({
   card: {
+    flex:            1,
     backgroundColor: COLORS.cardBackground,
     borderRadius:    RADIUS.lg,
-    padding:         SPACING.sm,
+    padding:         SPACING.md,
     width:           CARD_WIDTH,
     ...SHADOW.small,
   },
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
   tagsRow: {
     flexDirection: 'row',
     gap:           SPACING.sm,
-    marginBottom:  SPACING.xs,
+    marginBottom:  SPACING.sm,
   },
 
   tagPill: {
@@ -126,15 +127,18 @@ const styles = StyleSheet.create({
   },
 
   grid: {
-    gap: SPACING.sm,
+    flex: 1,
+    gap:  SPACING.sm,
   },
 
   gridRow: {
+    flex:          1,
     flexDirection: 'row',
     gap:           SPACING.sm,
   },
 
   cell: {
+    flex:            1,
     borderRadius:    RADIUS.md,
     overflow:        'hidden',
     backgroundColor: COLORS.inputBackground,
@@ -154,7 +158,7 @@ const styles = StyleSheet.create({
     flexDirection:  'row',
     justifyContent: 'flex-end',
     gap:            SPACING.sm,
-    marginTop:      SPACING.xs,
+    marginTop:      SPACING.sm,
   },
 
   iconButton: {
