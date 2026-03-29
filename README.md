@@ -48,6 +48,36 @@ College students already have a lot to balance, but they also want to make the m
 
 ---
 
+# How to Run ALURÉ
+
+## What You Need First (One-Time Install)
+- **Node.js** — download the LTS version  
+- **Git**  
+- **Expo Go** on your phone — App Store or Google Play  
+
+## Step 1 — Clone and Install
+```bash
+git clone https://github.com/Markboon123/Alure.git
+cd Alure
+npm install
+```
+## Step 2 — Start the app
+Start the development server with:
+```bash
+npx expo start
+```
+A QR code will appear in your terminal.
+
+## Step 3 — Open on your phone
+
+- **iPhone:** Open the Camera app, point it at the QR code, then tap the banner that appears  
+- **Android:** Open Expo Go, tap **Scan QR code**, and point it at the QR code  
+
+> Make sure your phone and computer are on the **same Wi-Fi network**.  
+> The app should load in about 10–20 seconds.
+
+---
+
 ## 🔮 Future Work
 - Smarter AI personalization (deeper learning from user behavior)
 - “Build an outfit around one item” feature
