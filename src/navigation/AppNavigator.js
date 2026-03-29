@@ -1,93 +1,72 @@
 // ─────────────────────────────────────────────
 // AppNavigator
-// Sets up the full navigation structure:
-//
-//   Root Stack
-//   └─ Main Tab Navigator (bottom tabs)
-//      ├─ Discover Stack
-//      │   └─ DiscoverScreen
-//      ├─ Closet Stack
-//      │   ├─ ClosetScreen
-//      │   ├─ ItemDetailScreen
-//      │   └─ AddItemScreen
-//      ├─ Outfits Stack
-//      │   ├─ OutfitsScreen
-//      │   └─ OutfitDetailScreen
-//      └─ Events Stack
-//          ├─ EventsScreen
-//          └─ EventDetailScreen
+// Swipeable tabs using MaterialTopTabNavigator
+// with a custom bottom tab bar
 // ─────────────────────────────────────────────
 
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 
 import { COLORS, FONTS, SPACING } from '../constants/theme';
 
 // ── Screens ───────────────────────────────────
-import DiscoverScreen        from '../screens/DiscoverScreen';
-import GenerateOutfitScreen  from '../screens/GenerateOutfitScreen';
-import ClosetScreen          from '../screens/ClosetScreen';
-import ItemDetailScreen   from '../screens/ItemDetailScreen';
-import AddItemScreen      from '../screens/AddItemScreen';
-import OutfitsScreen      from '../screens/OutfitsScreen';
-import OutfitDetailScreen from '../screens/OutfitDetailScreen';
-import EventsScreen       from '../screens/EventsScreen';
-import EventDetailScreen  from '../screens/EventDetailScreen';
-import HelpScreen         from '../screens/HelpScreen';
+import DiscoverScreen       from '../screens/DiscoverScreen';
+import GenerateOutfitScreen from '../screens/GenerateOutfitScreen';
+import ClosetScreen         from '../screens/ClosetScreen';
+import ItemDetailScreen     from '../screens/ItemDetailScreen';
+import AddItemScreen        from '../screens/AddItemScreen';
+import OutfitsScreen        from '../screens/OutfitsScreen';
+import OutfitDetailScreen   from '../screens/OutfitDetailScreen';
+import EventsScreen         from '../screens/EventsScreen';
+import EventDetailScreen    from '../screens/EventDetailScreen';
+import HelpScreen           from '../screens/HelpScreen';
 
-const Tab   = createBottomTabNavigator();
-const Stack = createStackNavigator();
+const TopTab = createMaterialTopTabNavigator();
+const Stack  = createStackNavigator();
 
-// ── Tab icon component ────────────────────────
-function TabIcon({ ionicon, label, focused }) {
+// ── Tab definitions ───────────────────────────
+const TABS = [
+  { name: 'Discover', ionicon: 'compass-outline' },
+  { name: 'Closet',   ionicon: 'shirt-outline'   },
+  { name: 'Outfits',  ionicon: 'layers-outline'  },
+  { name: 'Events',   ionicon: 'calendar-outline' },
+];
+
+// ── Custom bottom tab bar ─────────────────────
+function BottomTabBar({ state, navigation }) {
   return (
-    <View style={tabIconStyles.wrapper}>
-      <View style={[tabIconStyles.iconWrap, focused && tabIconStyles.iconWrapFocused]}>
-        <Ionicons
-          name={focused ? ionicon.replace('-outline', '') : ionicon}
-          size={20}
-          color={focused ? COLORS.white : COLORS.textLight}
-        />
-      </View>
-      <Text style={[tabIconStyles.label, focused && tabIconStyles.labelFocused]}>
-        {label.toUpperCase()}
-      </Text>
+    <View style={styles.tabBar}>
+      {state.routes.map((route, index) => {
+        const focused = state.index === index;
+        const tab = TABS.find(t => t.name === route.name) || TABS[0];
+
+        return (
+          <TouchableOpacity
+            key={route.key}
+            style={styles.tabItem}
+            onPress={() => navigation.navigate(route.name)}
+            accessibilityLabel={tab.name}
+          >
+            <View style={[styles.iconWrap, focused && styles.iconWrapFocused]}>
+              <Ionicons
+                name={focused ? tab.ionicon.replace('-outline', '') : tab.ionicon}
+                size={20}
+                color={focused ? COLORS.white : COLORS.textLight}
+              />
+            </View>
+            <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
+              {tab.name.toUpperCase()}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
-
-const tabIconStyles = StyleSheet.create({
-  wrapper: {
-    alignItems:     'center',
-    justifyContent: 'center',
-    paddingTop:     SPACING.xs,
-    width:          72,
-  },
-  iconWrap: {
-    width:          36,
-    height:         36,
-    borderRadius:   18,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  iconWrapFocused: {
-    backgroundColor: COLORS.textDark,
-  },
-  label: {
-    fontSize:      9,
-    color:         COLORS.textLight,
-    fontFamily:    FONTS.bold,
-    letterSpacing: 0,
-    marginTop:     2,
-  },
-  labelFocused: {
-    color: COLORS.textDark,
-  },
-});
 
 // ── Individual stacks ─────────────────────────
 
@@ -103,10 +82,9 @@ function DiscoverStack() {
 function ClosetStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="ClosetHome"  component={ClosetScreen} />
-      <Stack.Screen name="ItemDetail"  component={ItemDetailScreen} />
-      <Stack.Screen name="AddItem"     component={AddItemScreen} />
-      {/* OutfitDetail is reachable from ItemDetail */}
+      <Stack.Screen name="ClosetHome"   component={ClosetScreen} />
+      <Stack.Screen name="ItemDetail"   component={ItemDetailScreen} />
+      <Stack.Screen name="AddItem"      component={AddItemScreen} />
       <Stack.Screen name="OutfitDetail" component={OutfitDetailScreen} />
     </Stack.Navigator>
   );
@@ -117,7 +95,6 @@ function OutfitsStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="OutfitsHome"  component={OutfitsScreen} />
       <Stack.Screen name="OutfitDetail" component={OutfitDetailScreen} />
-      {/* ItemDetail is reachable from OutfitDetail */}
       <Stack.Screen name="ItemDetail"   component={ItemDetailScreen} />
     </Stack.Navigator>
   );
@@ -126,59 +103,28 @@ function OutfitsStack() {
 function EventsStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="EventsHome"   component={EventsScreen} />
-      <Stack.Screen name="EventDetail"  component={EventDetailScreen} />
+      <Stack.Screen name="EventsHome"  component={EventsScreen} />
+      <Stack.Screen name="EventDetail" component={EventDetailScreen} />
     </Stack.Navigator>
   );
 }
 
-// ── Main Tab Navigator ────────────────────────
+// ── Swipeable main tabs ───────────────────────
 function MainTabs() {
   return (
-    <Tab.Navigator
+    <TopTab.Navigator
+      tabBar={props => <BottomTabBar {...props} />}
+      tabBarPosition="bottom"
       screenOptions={{
-        headerShown:     false,
-        tabBarStyle:     styles.tabBar,
-        tabBarShowLabel: false,  // we render our own label inside TabIcon
+        swipeEnabled: true,
+        animationEnabled: true,
       }}
     >
-      <Tab.Screen
-        name="Discover"
-        component={DiscoverStack}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon ionicon="compass-outline" label="Discover" focused={focused} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Closet"
-        component={ClosetStack}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon ionicon="shirt-outline" label="Closet" focused={focused} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Outfits"
-        component={OutfitsStack}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon ionicon="layers-outline" label="Outfits" focused={focused} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Events"
-        component={EventsStack}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon ionicon="calendar-outline" label="Events" focused={focused} />
-          ),
-        }}
-      />
-    </Tab.Navigator>
+      <TopTab.Screen name="Discover" component={DiscoverStack} />
+      <TopTab.Screen name="Closet"   component={ClosetStack} />
+      <TopTab.Screen name="Outfits"  component={OutfitsStack} />
+      <TopTab.Screen name="Events"   component={EventsStack} />
+    </TopTab.Navigator>
   );
 }
 
@@ -203,11 +149,42 @@ export default function AppNavigator() {
 // ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
   tabBar: {
+    flexDirection:   'row',
     backgroundColor: COLORS.background,
-    borderTopColor:  COLORS.primaryLight,
     borderTopWidth:  1,
+    borderTopColor:  COLORS.primaryLight,
     height:          Platform.OS === 'ios' ? 80 : 64,
     paddingBottom:   Platform.OS === 'ios' ? SPACING.lg : SPACING.sm,
     paddingTop:      SPACING.xs,
+  },
+
+  tabItem: {
+    flex:           1,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+
+  iconWrap: {
+    width:          36,
+    height:         36,
+    borderRadius:   18,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+
+  iconWrapFocused: {
+    backgroundColor: COLORS.textDark,
+  },
+
+  tabLabel: {
+    fontSize:      9,
+    color:         COLORS.textLight,
+    fontFamily:    FONTS.bold,
+    letterSpacing: 0,
+    marginTop:     2,
+  },
+
+  tabLabelFocused: {
+    color: COLORS.textDark,
   },
 });
