@@ -1,13 +1,6 @@
 // ─────────────────────────────────────────────
 // ItemDetailScreen
-// Full expanded view of a single wardrobe item.
-// Shows:
-//   - Large item image
-//   - Last worn date
-//   - Editable badges / tags
-//   - Notes
-//   - Outfits this item appears in
-//   - Remove from closet
+// Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
 import React, { useState, useEffect } from 'react';
@@ -23,23 +16,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
-import {
-  saveItem,
-  deleteItem,
-  getAllOutfits,
-} from '../services/storageService';
+import { saveItem, deleteItem, getAllOutfits } from '../services/storageService';
 
 export default function ItemDetailScreen({ route, navigation }) {
   const { item: initialItem } = route.params;
 
-  const [item,          setItem]          = useState(initialItem);
-  const [outfits,       setOutfits]       = useState([]);
-  const [editingTags,   setEditingTags]   = useState(false);
-  const [newTag,        setNewTag]        = useState('');
-  const [editingNotes,  setEditingNotes]  = useState(false);
-  const [notesText,     setNotesText]     = useState(item.notes || '');
+  const [item,         setItem]         = useState(initialItem);
+  const [outfits,      setOutfits]      = useState([]);
+  const [editingTags,  setEditingTags]  = useState(false);
+  const [newTag,       setNewTag]       = useState('');
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesText,    setNotesText]    = useState(item.notes || '');
 
-  // ── Load outfits that include this item ──────
   useEffect(() => {
     getAllOutfits().then(all => {
       const related = all.filter(o => o.itemIds?.includes(item.id));
@@ -47,27 +35,24 @@ export default function ItemDetailScreen({ route, navigation }) {
     });
   }, [item.id]);
 
-  // ── Format last-worn date ─────────────────────
   function formatLastWorn(dateStr) {
     if (!dateStr) return 'Never';
-    const date = new Date(dateStr);
+    const date     = new Date(dateStr);
     const diffMs   = Date.now() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7)  return `${diffDays} days ago`;
-    if (diffDays < 14) return '1 week ago';
+    if (diffDays === 0)  return 'Today';
+    if (diffDays === 1)  return 'Yesterday';
+    if (diffDays < 7)   return `${diffDays} days ago`;
+    if (diffDays < 14)  return '1 week ago';
     return `${Math.floor(diffDays / 7)} weeks ago`;
   }
 
-  // ── Remove a tag ──────────────────────────────
   async function handleRemoveTag(tag) {
     const updated = { ...item, tags: item.tags.filter(t => t !== tag) };
     setItem(updated);
     await saveItem(updated);
   }
 
-  // ── Add a tag ─────────────────────────────────
   async function handleAddTag() {
     const trimmed = newTag.trim();
     if (!trimmed || item.tags?.includes(trimmed)) return;
@@ -77,7 +62,6 @@ export default function ItemDetailScreen({ route, navigation }) {
     await saveItem(updated);
   }
 
-  // ── Save edited notes ─────────────────────────
   async function handleSaveNotes() {
     const updated = { ...item, notes: notesText };
     setItem(updated);
@@ -85,7 +69,6 @@ export default function ItemDetailScreen({ route, navigation }) {
     await saveItem(updated);
   }
 
-  // ── Remove item from closet ───────────────────
   async function handleRemove() {
     Alert.alert(
       'Remove Item',
@@ -107,25 +90,19 @@ export default function ItemDetailScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
 
-      {/* ── Back button ──────────────────────── */}
-      <TouchableOpacity
-        style={styles.backBtn}
-        onPress={() => navigation.goBack()}
-      >
+      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
         <Text style={styles.backBtnText}>‹ Back</Text>
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
-        {/* ── Hero image ────────────────────── */}
+        {/* ── Hero image ── */}
         <View style={styles.heroCard}>
           <Image
             source={{ uri: item.imageUri }}
             style={styles.heroImage}
             resizeMode="contain"
           />
-
-          {/* Last worn chip */}
           <View style={styles.lastWornChip}>
             <Text style={styles.lastWornIcon}>🕐</Text>
             <Text style={styles.lastWornText}>
@@ -134,17 +111,14 @@ export default function ItemDetailScreen({ route, navigation }) {
           </View>
         </View>
 
-        {/* ── Item name & brand ─────────────── */}
         <Text style={styles.itemName}>{item.name}</Text>
-        {item.brand && (
-          <Text style={styles.itemBrand}>{item.brand}</Text>
-        )}
+        {item.brand && <Text style={styles.itemBrand}>{item.brand}</Text>}
 
-        {/* ── Badges / Tags ─────────────────── */}
+        {/* ── Badges / Tags ── */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>BADGES</Text>
           <TouchableOpacity onPress={() => setEditingTags(!editingTags)}>
-            <Text style={styles.editBadgesText}>
+            <Text style={styles.editText}>
               {editingTags ? '✓ Done' : '✏ Edit Badges'}
             </Text>
           </TouchableOpacity>
@@ -155,17 +129,13 @@ export default function ItemDetailScreen({ route, navigation }) {
             <View key={tag} style={styles.tagPill}>
               <Text style={styles.tagText}>{tag}</Text>
               {editingTags && (
-                <TouchableOpacity
-                  onPress={() => handleRemoveTag(tag)}
-                  style={styles.tagRemove}
-                >
+                <TouchableOpacity onPress={() => handleRemoveTag(tag)} style={styles.tagRemove}>
                   <Text style={styles.tagRemoveText}>✕</Text>
                 </TouchableOpacity>
               )}
             </View>
           ))}
 
-          {/* Add tag input (shown when editing) */}
           {editingTags && (
             <View style={styles.addTagRow}>
               <TextInput
@@ -184,13 +154,11 @@ export default function ItemDetailScreen({ route, navigation }) {
           )}
         </View>
 
-        {/* ── Notes ────────────────────────── */}
+        {/* ── Notes ── */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>NOTES</Text>
           <TouchableOpacity onPress={() => setEditingNotes(!editingNotes)}>
-            <Text style={styles.editBadgesText}>
-              {editingNotes ? '' : '✏ Edit'}
-            </Text>
+            <Text style={styles.editText}>{editingNotes ? '' : '✏ Edit'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -211,18 +179,14 @@ export default function ItemDetailScreen({ route, navigation }) {
           </View>
         ) : (
           <View style={styles.notesBox}>
-            <Text style={styles.notesText}>
-              {item.notes || '"No notes yet."'}
-            </Text>
+            <Text style={styles.notesText}>{item.notes || '"No notes yet."'}</Text>
           </View>
         )}
 
-        {/* ── Outfits featuring this item ──── */}
+        {/* ── Outfits featuring this item ── */}
         {outfits.length > 0 && (
           <>
-            <Text style={[styles.sectionLabel, { marginTop: SPACING.lg }]}>
-              IN OUTFITS
-            </Text>
+            <Text style={[styles.sectionLabel, { marginTop: SPACING.lg }]}>IN OUTFITS</Text>
             {outfits.map(outfit => (
               <TouchableOpacity
                 key={outfit.id}
@@ -236,7 +200,7 @@ export default function ItemDetailScreen({ route, navigation }) {
           </>
         )}
 
-        {/* ── Remove button ─────────────────── */}
+        {/* ── Remove button ── */}
         <TouchableOpacity style={styles.removeBtn} onPress={handleRemove}>
           <Text style={styles.removeBtnIcon}>⊖</Text>
           <Text style={styles.removeBtnText}>REMOVE FROM CLOSET</Text>
@@ -247,7 +211,6 @@ export default function ItemDetailScreen({ route, navigation }) {
   );
 }
 
-// ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex:            1,
@@ -260,9 +223,9 @@ const styles = StyleSheet.create({
   },
 
   backBtnText: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeMD,
     color:      COLORS.primary,
-    fontWeight: '600',
   },
 
   scrollContent: {
@@ -286,14 +249,14 @@ const styles = StyleSheet.create({
   },
 
   lastWornChip: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    borderRadius:    RADIUS.full,
+    flexDirection:     'row',
+    alignItems:        'center',
+    backgroundColor:   'rgba(255,255,255,0.85)',
+    borderRadius:      RADIUS.full,
     paddingHorizontal: SPACING.md,
     paddingVertical:   SPACING.xs,
-    margin:          SPACING.md,
-    gap:             SPACING.xs,
+    margin:            SPACING.md,
+    gap:               SPACING.xs,
   },
 
   lastWornIcon: {
@@ -301,20 +264,21 @@ const styles = StyleSheet.create({
   },
 
   lastWornText: {
-    fontSize:    FONTS.sizeSM,
-    color:       COLORS.textDark,
-    fontWeight:  '600',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeSM,
+    color:         COLORS.textDark,
     letterSpacing: 0.5,
   },
 
   itemName: {
-    fontSize:    FONTS.sizeXL,
-    fontWeight:  '700',
-    color:       COLORS.textDark,
+    fontFamily:   FONTS.bold,
+    fontSize:     FONTS.sizeXL,
+    color:        COLORS.textDark,
     marginBottom: SPACING.xs,
   },
 
   itemBrand: {
+    fontFamily:   FONTS.regular,
     fontSize:     FONTS.sizeMD,
     color:        COLORS.textMedium,
     marginBottom: SPACING.lg,
@@ -328,16 +292,16 @@ const styles = StyleSheet.create({
   },
 
   sectionLabel: {
-    fontSize:    FONTS.sizeSM,
-    color:       COLORS.textMedium,
-    fontWeight:  '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeSM,
+    color:         COLORS.textMedium,
     letterSpacing: 2,
   },
 
-  editBadgesText: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.primary,
-    fontWeight: '600',
+  editText: {
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.primary,
   },
 
   tagsWrap: {
@@ -358,9 +322,9 @@ const styles = StyleSheet.create({
   },
 
   tagText: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textDark,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textDark,
   },
 
   tagRemove: {
@@ -368,9 +332,9 @@ const styles = StyleSheet.create({
   },
 
   tagRemoveText: {
-    fontSize:  FONTS.sizeXS,
-    color:     COLORS.negative,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeXS,
+    color:      COLORS.negative,
   },
 
   addTagRow: {
@@ -380,13 +344,14 @@ const styles = StyleSheet.create({
   },
 
   addTagInput: {
-    backgroundColor: COLORS.cardBackground,
-    borderRadius:    RADIUS.full,
+    fontFamily:        FONTS.regular,
+    backgroundColor:   COLORS.cardBackground,
+    borderRadius:      RADIUS.full,
     paddingHorizontal: SPACING.md,
     paddingVertical:   SPACING.xs,
-    fontSize:        FONTS.sizeSM,
-    color:           COLORS.textDark,
-    minWidth:        100,
+    fontSize:          FONTS.sizeSM,
+    color:             COLORS.textDark,
+    minWidth:          100,
   },
 
   addTagBtn: {
@@ -399,9 +364,9 @@ const styles = StyleSheet.create({
   },
 
   addTagBtnText: {
-    fontSize:  FONTS.sizeLG,
-    color:     COLORS.white,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeLG,
+    color:      COLORS.white,
   },
 
   notesBox: {
@@ -412,10 +377,11 @@ const styles = StyleSheet.create({
   },
 
   notesText: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textMedium,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textMedium,
     lineHeight: FONTS.sizeSM * 1.6,
-    fontStyle: 'italic',
+    fontStyle:  'italic',
   },
 
   notesEditContainer: {
@@ -426,44 +392,46 @@ const styles = StyleSheet.create({
   },
 
   notesInput: {
-    fontSize:    FONTS.sizeSM,
-    color:       COLORS.textDark,
-    lineHeight:  FONTS.sizeSM * 1.6,
-    minHeight:   80,
+    fontFamily:   FONTS.regular,
+    fontSize:     FONTS.sizeSM,
+    color:        COLORS.textDark,
+    lineHeight:   FONTS.sizeSM * 1.6,
+    minHeight:    80,
     marginBottom: SPACING.sm,
   },
 
   saveNotesBtn: {
-    alignSelf:       'flex-end',
-    backgroundColor: COLORS.primary,
-    borderRadius:    RADIUS.full,
+    alignSelf:         'flex-end',
+    backgroundColor:   COLORS.primary,
+    borderRadius:      RADIUS.full,
     paddingHorizontal: SPACING.md,
     paddingVertical:   SPACING.xs,
   },
 
   saveNotesBtnText: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.white,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.white,
   },
 
   outfitRow: {
-    flexDirection:  'row',
-    justifyContent: 'space-between',
-    alignItems:     'center',
-    paddingVertical: SPACING.md,
+    flexDirection:     'row',
+    justifyContent:    'space-between',
+    alignItems:        'center',
+    paddingVertical:   SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.cardBackground,
   },
 
   outfitRowName: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.textDark,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.textDark,
   },
 
   outfitRowArrow: {
-    fontSize:  FONTS.sizeLG,
-    color:     COLORS.textMedium,
+    fontSize: FONTS.sizeLG,
+    color:    COLORS.textMedium,
   },
 
   removeBtn: {
@@ -479,14 +447,14 @@ const styles = StyleSheet.create({
   },
 
   removeBtnIcon: {
-    fontSize:  FONTS.sizeLG,
-    color:     COLORS.negative,
+    fontSize: FONTS.sizeLG,
+    color:    COLORS.negative,
   },
 
   removeBtnText: {
-    fontSize:    FONTS.sizeSM,
-    color:       COLORS.negative,
-    fontWeight:  '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeSM,
+    color:         COLORS.negative,
     letterSpacing: 1,
   },
 });

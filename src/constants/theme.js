@@ -41,10 +41,10 @@ export const COLORS = {
 };
 
 export const FONTS = {
-  // Use system fonts; swap in a custom font (e.g. Cormorant) via expo-font if desired
-  regular:    'System',
-  medium:     'System',
-  bold:       'System',
+  brand:   'CormorantGaramond_600SemiBold',  // brand / logo only
+  regular: 'Jost_400Regular',
+  medium:  'Jost_500Medium',
+  bold:    'Jost_600SemiBold',
 
   sizeXS:   10,
   sizeSM:   12,

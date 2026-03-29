@@ -1,11 +1,6 @@
 // ─────────────────────────────────────────────
 // OutfitsScreen  (third tab)
-// Shows saved outfit collections:
-//   Favorites tab  – outfits the user bookmarked
-//   Previously Worn tab – outfits with wornDates
-//
-// If Favorites is empty, defaults to Previously Worn.
-// Tapping an outfit → OutfitDetailScreen
+// Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
 import React, { useState, useCallback } from 'react';
@@ -16,43 +11,35 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { getAllOutfits, getAllItems } from '../services/storageService';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const CARD_WIDTH   = SCREEN_WIDTH - SPACING.lg * 2;
-
 export default function OutfitsScreen({ navigation }) {
-  const [outfits,    setOutfits]    = useState([]);
-  const [items,      setItems]      = useState([]);
-  const [activeTab,  setActiveTab]  = useState('favorites');  // 'favorites' | 'worn'
+  const [outfits,   setOutfits]   = useState([]);
+  const [items,     setItems]     = useState([]);
+  const [activeTab, setActiveTab] = useState('favorites');
 
-  // ── Reload on focus ───────────────────────────
   useFocusEffect(
     useCallback(() => {
       Promise.all([getAllOutfits(), getAllItems()]).then(([o, i]) => {
         setOutfits(o);
         setItems(i);
-
-        // If no favorites, default to Previously Worn tab
         const hasFavorites = o.some(outfit => outfit.isFavorite);
         if (!hasFavorites) setActiveTab('worn');
       });
     }, [])
   );
 
-  // ── Filter by active tab ──────────────────────
   const displayedOutfits = activeTab === 'favorites'
     ? outfits.filter(o => o.isFavorite)
     : outfits.filter(o => o.wornDates && o.wornDates.length > 0)
         .sort((a, b) => new Date(b.wornDates[0]) - new Date(a.wornDates[0]));
 
-  // ── Get images for the 2×2 thumbnail grid ────
   function getOutfitImages(outfit) {
     if (!outfit?.itemIds) return [];
     return outfit.itemIds
@@ -61,14 +48,11 @@ export default function OutfitsScreen({ navigation }) {
       .slice(0, 4);
   }
 
-  // ── Format last worn ──────────────────────────
   function formatDate(dateStr) {
     if (!dateStr) return '';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  // ── Render one outfit card ────────────────────
   function renderOutfit({ item: outfit }) {
     const outfitItems = getOutfitImages(outfit);
 
@@ -78,7 +62,6 @@ export default function OutfitsScreen({ navigation }) {
         onPress={() => navigation.navigate('OutfitDetail', { outfitId: outfit.id })}
         accessibilityLabel={`View outfit: ${outfit.name}`}
       >
-        {/* 2×2 thumbnail grid */}
         <View style={styles.thumbnailGrid}>
           {[0, 1, 2, 3].map(idx => (
             <View key={idx} style={styles.thumbnailCell}>
@@ -95,20 +78,17 @@ export default function OutfitsScreen({ navigation }) {
           ))}
         </View>
 
-        {/* Outfit info */}
         <View style={styles.outfitInfo}>
           <Text style={styles.outfitName}>{outfit.name}</Text>
 
-          {/* Style tags */}
           <View style={styles.tagsRow}>
             {outfit.tags?.slice(0, 3).map(tag => (
               <View key={tag} style={styles.tagPill}>
-                <Text style={styles.tagText}>{tag}</Text>
+                <Text style={styles.tagText}>{tag.toUpperCase()}</Text>
               </View>
             ))}
           </View>
 
-          {/* Worn date (shown on Previously Worn tab) */}
           {activeTab === 'worn' && outfit.wornDates?.[0] && (
             <Text style={styles.wornDate}>
               Last worn {formatDate(outfit.wornDates[0])}
@@ -116,12 +96,11 @@ export default function OutfitsScreen({ navigation }) {
           )}
         </View>
 
-        {/* Favorite heart */}
         {outfit.isFavorite && (
-          <Text style={styles.favoriteHeart}>♥</Text>
+          <Ionicons name="heart" size={18} color={COLORS.primary} style={styles.heartIcon} />
         )}
 
-        <Text style={styles.arrowIcon}>›</Text>
+        <Ionicons name="chevron-forward" size={18} color={COLORS.textLight} />
       </TouchableOpacity>
     );
   }
@@ -129,42 +108,70 @@ export default function OutfitsScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
 
-      {/* ── Header ───────────────────────────── */}
-      <Text style={styles.headerTitle}>OUTFITS</Text>
+      {/* ── Top nav bar ── */}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Settings"
+        >
+          <Ionicons name="settings-outline" size={22} color={COLORS.textDark} />
+        </TouchableOpacity>
 
-      {/* ── Tab bar ──────────────────────────── */}
+        <Text style={styles.brandName}>ALURÉ</Text>
+
+        <TouchableOpacity
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Help"
+        >
+          <Ionicons name="help-circle-outline" size={22} color={COLORS.textDark} />
+        </TouchableOpacity>
+      </View>
+
+      {/* ── Page title ── */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Outfits</Text>
+      </View>
+
+      {/* ── Tab bar ── */}
       <View style={styles.tabBar}>
         {[
-          { key: 'favorites', label: '♥ Favorites' },
-          { key: 'worn',      label: '🕐 Previously Worn' },
+          { key: 'favorites', label: 'Favorites',       icon: 'heart-outline' },
+          { key: 'worn',      label: 'Previously Worn', icon: 'time-outline'  },
         ].map(tab => (
           <TouchableOpacity
             key={tab.key}
             style={[styles.tabBtn, activeTab === tab.key && styles.tabBtnActive]}
             onPress={() => setActiveTab(tab.key)}
           >
+            <Ionicons
+              name={tab.icon}
+              size={14}
+              color={activeTab === tab.key ? COLORS.white : COLORS.textMedium}
+              style={styles.tabIcon}
+            />
             <Text style={[
               styles.tabBtnText,
               activeTab === tab.key && styles.tabBtnTextActive,
             ]}>
-              {tab.label}
+              {tab.label.toUpperCase()}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* ── Outfit list ──────────────────────── */}
+      {/* ── Outfit list ── */}
       <FlatList
         data={displayedOutfits}
         keyExtractor={o => o.id}
         renderItem={renderOutfit}
+        style={styles.list}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <Text style={styles.emptyText}>
             {activeTab === 'favorites'
               ? 'No saved outfits yet.\nHeart an outfit on the Discover tab!'
-              : 'You haven\'t logged any outfits yet.\nTap "I\'ll wear it" on the Discover tab!'}
+              : "You haven't logged any outfits yet.\nTap \"I'll wear it\" on the Discover tab!"}
           </Text>
         }
       />
@@ -172,21 +179,37 @@ export default function OutfitsScreen({ navigation }) {
   );
 }
 
-// ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex:            1,
     backgroundColor: COLORS.background,
   },
 
-  headerTitle: {
-    fontSize:       FONTS.size2XL,
-    fontWeight:     '800',
-    color:          COLORS.textDark,
-    letterSpacing:  2,
+  topBar: {
+    flexDirection:     'row',
+    justifyContent:    'space-between',
+    alignItems:        'center',
     paddingHorizontal: SPACING.lg,
-    paddingTop:     SPACING.md,
-    paddingBottom:  SPACING.sm,
+    paddingVertical:   SPACING.sm + 2,
+  },
+
+  brandName: {
+    fontFamily:    FONTS.brand,
+    fontSize:      22,
+    letterSpacing: 5,
+    color:         COLORS.textDark,
+  },
+
+  header: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop:        SPACING.xs,
+    paddingBottom:     SPACING.md,
+  },
+
+  headerTitle: {
+    fontFamily: FONTS.medium,
+    fontSize:   34,
+    color:      COLORS.textDark,
   },
 
   tabBar: {
@@ -197,30 +220,42 @@ const styles = StyleSheet.create({
   },
 
   tabBtn: {
-    flex:              1,
-    paddingVertical:   SPACING.sm,
-    borderRadius:      RADIUS.full,
-    backgroundColor:   COLORS.cardBackground,
-    alignItems:        'center',
+    flex:            1,
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'center',
+    paddingVertical: SPACING.sm,
+    borderRadius:    RADIUS.full,
+    backgroundColor: COLORS.cardBackground,
+    gap:             4,
   },
 
   tabBtnActive: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.textDark,
+  },
+
+  tabIcon: {
+    marginRight: 2,
   },
 
   tabBtnText: {
-    fontSize:   FONTS.sizeSM,
-    color:      COLORS.textMedium,
-    fontWeight: '600',
+    fontFamily:    FONTS.bold,
+    fontSize:      10,
+    color:         COLORS.textMedium,
+    letterSpacing: 0.8,
   },
 
   tabBtnTextActive: {
     color: COLORS.white,
   },
 
+  list: {
+    flex: 1,
+  },
+
   listContent: {
     paddingHorizontal: SPACING.lg,
-    paddingBottom:     SPACING.xxl,
+    paddingBottom:     80,
     gap:               SPACING.md,
   },
 
@@ -235,17 +270,17 @@ const styles = StyleSheet.create({
   },
 
   thumbnailGrid: {
-    width:        100,
-    height:       100,
-    flexDirection:'row',
-    flexWrap:     'wrap',
-    borderRadius: RADIUS.md,
-    overflow:     'hidden',
+    width:         90,
+    height:        90,
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    borderRadius:  RADIUS.md,
+    overflow:      'hidden',
   },
 
   thumbnailCell: {
-    width:  50,
-    height: 50,
+    width:           45,
+    height:          45,
     backgroundColor: COLORS.inputBackground,
   },
 
@@ -265,8 +300,8 @@ const styles = StyleSheet.create({
   },
 
   outfitName: {
-    fontSize:   FONTS.sizeMD,
-    fontWeight: '700',
+    fontFamily: FONTS.medium,
+    fontSize:   15,
     color:      COLORS.textDark,
   },
 
@@ -277,41 +312,37 @@ const styles = StyleSheet.create({
   },
 
   tagPill: {
-    backgroundColor:   COLORS.white,
+    backgroundColor:   COLORS.background,
     borderRadius:      RADIUS.full,
     paddingHorizontal: SPACING.sm,
-    paddingVertical:   2,
+    paddingVertical:   3,
   },
 
   tagText: {
-    fontSize:  FONTS.sizeXS,
-    color:     COLORS.textMedium,
-    fontWeight: '500',
+    fontFamily:    FONTS.regular,
+    fontSize:      9,
+    color:         COLORS.textMedium,
+    letterSpacing: 0.6,
   },
 
   wornDate: {
-    fontSize:  FONTS.sizeXS,
-    color:     COLORS.textLight,
-    fontStyle: 'italic',
+    fontFamily: FONTS.regular,
+    fontSize:   11,
+    color:      COLORS.textLight,
+    fontStyle:  'italic',
   },
 
-  favoriteHeart: {
-    fontSize:  FONTS.sizeLG,
-    color:     COLORS.primary,
-    marginRight: SPACING.xs,
-  },
-
-  arrowIcon: {
-    fontSize:  FONTS.sizeXL,
-    color:     COLORS.textLight,
+  heartIcon: {
+    marginRight: 2,
   },
 
   emptyText: {
-    textAlign:  'center',
-    color:      COLORS.textLight,
-    fontSize:   FONTS.sizeMD,
-    lineHeight: FONTS.sizeMD * 1.6,
-    marginTop:  SPACING.xxl,
+    textAlign:         'center',
+    fontFamily:        FONTS.regular,
+    color:             COLORS.textLight,
+    fontSize:          14,
+    lineHeight:        22,
+    marginTop:         SPACING.xxl,
     paddingHorizontal: SPACING.xl,
   },
 });

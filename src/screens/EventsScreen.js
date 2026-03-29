@@ -1,8 +1,6 @@
 // ─────────────────────────────────────────────
 // EventsScreen  (fourth tab)
-// Shows local events sorted by date in three buckets:
-//   Tonight / This Weekend / This Week
-// Tapping an event → EventDetailScreen
+// Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
 import React, { useState } from 'react';
@@ -22,7 +20,6 @@ import { MOCK_EVENTS } from '../data/mockData';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-// Category badge styling lookup
 const CATEGORY_STYLE = {
   Culture:   { bg: COLORS.cultureBadge,   text: COLORS.cultureText },
   Nightlife: { bg: COLORS.nightlifeBadge, text: COLORS.nightlifeText },
@@ -30,7 +27,6 @@ const CATEGORY_STYLE = {
   Casual:    { bg: COLORS.casualBadge,    text: COLORS.casualText },
 };
 
-// Which time bucket to highlight in the tab row
 const BUCKETS = [
   { key: 'tonight', label: 'Tonight' },
   { key: 'weekend', label: 'This Weekend' },
@@ -38,16 +34,10 @@ const BUCKETS = [
 ];
 
 export default function EventsScreen({ navigation }) {
-  const [activeBucket, setActiveBucket] = useState(null); // null = show all
+  const [activeBucket, setActiveBucket] = useState(null);
 
   const events = MOCK_EVENTS;
 
-  // Filter by selected bucket (null = all)
-  const displayedEvents = activeBucket
-    ? events.filter(e => e.bucket === activeBucket)
-    : events;
-
-  // Group by bucket for the "All" view
   function renderSection(bucket) {
     const sectionEvents = events.filter(e => e.bucket === bucket.key);
     if (sectionEvents.length === 0) return null;
@@ -70,16 +60,13 @@ export default function EventsScreen({ navigation }) {
         onPress={() => navigation.navigate('EventDetail', { event })}
         accessibilityLabel={`View event: ${event.name}`}
       >
-        {/* Thumbnail */}
         <Image
           source={{ uri: event.imageUri }}
           style={styles.eventThumb}
           resizeMode="cover"
         />
 
-        {/* Text content */}
         <View style={styles.eventContent}>
-          {/* Category badge */}
           <View style={[styles.categoryBadge, { backgroundColor: catStyle.bg }]}>
             <Text style={[styles.categoryText, { color: catStyle.text }]}>
               {event.category.toUpperCase()}
@@ -99,12 +86,12 @@ export default function EventsScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
 
-      {/* ── Hero header ──────────────────────── */}
+      {/* ── Hero header ── */}
       <View style={styles.heroHeader}>
         <Text style={styles.heroTitle}>EVENTS{'\n'}NEAR YOU</Text>
       </View>
 
-      {/* ── Bucket filter tabs ───────────────── */}
+      {/* ── Bucket filter tabs ── */}
       <View style={styles.bucketRow}>
         <TouchableOpacity
           style={[styles.bucketTab, !activeBucket && styles.bucketTabActive]}
@@ -130,13 +117,12 @@ export default function EventsScreen({ navigation }) {
         ))}
       </View>
 
-      {/* ── Events list ──────────────────────── */}
+      {/* ── Events list ── */}
       <FlatList
         data={activeBucket ? [activeBucket] : BUCKETS.map(b => b.key)}
         keyExtractor={k => k}
         renderItem={({ item: bucketKey }) => {
           if (activeBucket) {
-            // Flat list of cards
             return (
               <View style={styles.flatSection}>
                 {events.filter(e => e.bucket === bucketKey).map(renderEventCard)}
@@ -153,7 +139,6 @@ export default function EventsScreen({ navigation }) {
   );
 }
 
-// ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex:            1,
@@ -167,19 +152,19 @@ const styles = StyleSheet.create({
   },
 
   heroTitle: {
-    fontSize:   FONTS.size3XL * 1.1,
-    fontWeight: '900',
-    color:      COLORS.white,
-    lineHeight: FONTS.size3XL * 1.2,
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.size3XL * 1.1,
+    color:         COLORS.white,
+    lineHeight:    FONTS.size3XL * 1.2,
     letterSpacing: 1,
   },
 
   bucketRow: {
-    flexDirection: 'row',
+    flexDirection:     'row',
     paddingHorizontal: SPACING.lg,
-    gap:           SPACING.sm,
-    marginBottom:  SPACING.md,
-    flexWrap:      'wrap',
+    gap:               SPACING.sm,
+    marginBottom:      SPACING.md,
+    flexWrap:          'wrap',
   },
 
   bucketTab: {
@@ -194,9 +179,9 @@ const styles = StyleSheet.create({
   },
 
   bucketTabText: {
-    fontSize:  FONTS.sizeSM,
-    color:     'rgba(255,255,255,0.7)',
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeSM,
+    color:      'rgba(255,255,255,0.7)',
   },
 
   bucketTabTextActive: {
@@ -217,11 +202,11 @@ const styles = StyleSheet.create({
   },
 
   sectionLabel: {
-    fontSize:    FONTS.sizeSM,
-    color:       'rgba(255,255,255,0.5)',
-    fontWeight:  '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeSM,
+    color:         'rgba(255,255,255,0.5)',
     letterSpacing: 2,
-    marginBottom: SPACING.sm,
+    marginBottom:  SPACING.sm,
   },
 
   eventCard: {
@@ -253,30 +238,32 @@ const styles = StyleSheet.create({
   },
 
   categoryText: {
-    fontSize:  FONTS.sizeXS,
-    fontWeight: '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeXS,
     letterSpacing: 0.5,
   },
 
   eventName: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeMD,
-    fontWeight: '700',
     color:      COLORS.textDark,
   },
 
   eventMeta: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textMedium,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textMedium,
   },
 
   eventLocation: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textLight,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textLight,
   },
 
   eventArrow: {
-    fontSize:    FONTS.sizeXL,
-    color:       COLORS.textLight,
+    fontSize:     FONTS.sizeXL,
+    color:        COLORS.textLight,
     paddingRight: SPACING.sm,
   },
 });

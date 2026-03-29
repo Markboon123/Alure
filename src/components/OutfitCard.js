@@ -1,11 +1,6 @@
 // ─────────────────────────────────────────────
 // OutfitCard Component
-// Displays a single outfit as a 2x2 grid of
-// clothing pieces with action buttons.
-//
-// Layout (matches Figma spec):
-//   [jacket]  [bottom]
-//   [top]     [shoes]
+// Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
 import React from 'react';
@@ -19,17 +14,16 @@ import {
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
-const CARD_WIDTH  = Dimensions.get('window').width - SPACING.lg * 2;
-const CELL_SIZE   = (CARD_WIDTH - SPACING.sm * 3) / 2;   // two columns with a gap
+const CARD_WIDTH = Dimensions.get('window').width - SPACING.lg * 2;
+const CELL_SIZE  = (CARD_WIDTH - SPACING.sm * 3) / 2;
 
 export default function OutfitCard({
-  outfit,          // outfit object with itemIds and tags
-  items,           // full item list so we can look up images
-  onSave,          // () => void  – bookmark pressed
-  onEdit,          // () => void  – pencil pressed
+  outfit,
+  items,
+  onSave,
+  onEdit,
   isSaved = false,
 }) {
-  // Find item objects by category for fixed-position layout
   const jacket = items.find(i => outfit.itemIds.includes(i.id) && i.category === 'jacket');
   const top    = items.find(i => outfit.itemIds.includes(i.id) && i.category === 'top');
   const bottom = items.find(i => outfit.itemIds.includes(i.id) && i.category === 'bottom');
@@ -38,7 +32,7 @@ export default function OutfitCard({
   return (
     <View style={styles.card}>
 
-      {/* ── Style tags ─────────────────────── */}
+      {/* ── Style tags ── */}
       <View style={styles.tagsRow}>
         {outfit.tags?.map(tag => (
           <View key={tag} style={styles.tagPill}>
@@ -47,31 +41,22 @@ export default function OutfitCard({
         ))}
       </View>
 
-      {/* ── 2×2 clothing grid ──────────────── */}
+      {/* ── 2×2 clothing grid ── */}
       <View style={styles.grid}>
-        {/* Top-left: jacket (or empty placeholder) */}
         <ClothingCell item={jacket} size={CELL_SIZE} />
-
-        {/* Top-right: bottom (skirt / trousers) */}
         <ClothingCell item={bottom} size={CELL_SIZE} />
-
-        {/* Bottom-left: top (shirt / tee) */}
-        <ClothingCell item={top} size={CELL_SIZE} />
-
-        {/* Bottom-right: shoes */}
-        <ClothingCell item={shoes} size={CELL_SIZE} />
+        <ClothingCell item={top}    size={CELL_SIZE} />
+        <ClothingCell item={shoes}  size={CELL_SIZE} />
       </View>
 
-      {/* ── Action icons (save / edit) ─────── */}
+      {/* ── Action icons ── */}
       <View style={styles.actionRow}>
         <TouchableOpacity
           style={styles.iconButton}
           onPress={onSave}
           accessibilityLabel="Save outfit"
         >
-          <Text style={[styles.actionIcon, isSaved && { color: COLORS.primary }]}>
-            {isSaved ? '🔖' : '🔖'}
-          </Text>
+          <Text style={[styles.actionIcon, isSaved && { color: COLORS.primary }]}>🔖</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -86,7 +71,6 @@ export default function OutfitCard({
   );
 }
 
-// ── Small helper: one grid cell ───────────────
 function ClothingCell({ item, size }) {
   return (
     <View style={[styles.cell, { width: size, height: size }]}>
@@ -97,80 +81,78 @@ function ClothingCell({ item, size }) {
           resizeMode="cover"
         />
       ) : (
-        // Empty placeholder when category is not in this outfit
         <View style={styles.emptyCell} />
       )}
     </View>
   );
 }
 
-// ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.cardBackground,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    width: CARD_WIDTH,
+    borderRadius:    RADIUS.lg,
+    padding:         SPACING.md,
+    width:           CARD_WIDTH,
     ...SHADOW.small,
   },
 
   tagsRow: {
     flexDirection: 'row',
-    gap: SPACING.sm,
-    marginBottom: SPACING.md,
+    gap:           SPACING.sm,
+    marginBottom:  SPACING.md,
   },
 
   tagPill: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.full,
+    backgroundColor:   COLORS.white,
+    borderRadius:      RADIUS.full,
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
+    paddingVertical:   SPACING.xs,
   },
 
   tagText: {
-    fontSize: FONTS.sizeSM,
-    color: COLORS.textDark,
-    fontWeight: '500',
+    fontFamily:    FONTS.medium,
+    fontSize:      FONTS.sizeSM,
+    color:         COLORS.textDark,
     letterSpacing: 0.5,
   },
 
   grid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.sm,
-    justifyContent: 'center',
+    flexWrap:      'wrap',
+    gap:           SPACING.sm,
+    justifyContent:'center',
   },
 
   cell: {
-    borderRadius: RADIUS.md,
-    overflow: 'hidden',
+    borderRadius:    RADIUS.md,
+    overflow:        'hidden',
     backgroundColor: COLORS.inputBackground,
   },
 
   cellImage: {
-    width: '100%',
+    width:  '100%',
     height: '100%',
   },
 
   emptyCell: {
-    flex: 1,
+    flex:            1,
     backgroundColor: COLORS.inputBackground,
   },
 
   actionRow: {
-    flexDirection: 'row',
+    flexDirection:  'row',
     justifyContent: 'flex-end',
-    gap: SPACING.sm,
-    marginTop: SPACING.md,
+    gap:            SPACING.sm,
+    marginTop:      SPACING.md,
   },
 
   iconButton: {
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS.full,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius:    RADIUS.full,
+    width:           40,
+    height:          40,
+    alignItems:      'center',
+    justifyContent:  'center',
     ...SHADOW.small,
   },
 

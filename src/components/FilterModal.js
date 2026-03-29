@@ -1,13 +1,9 @@
 // ─────────────────────────────────────────────
 // FilterModal Component
-// Bottom-sheet style modal for sorting and
-// filtering the closet grid.
-//
-// Sort options:  Newest Added | Most Worn | Least Worn
-// Filter options: by tag (collected from all items)
+// Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -16,8 +12,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 
 const SORT_OPTIONS = [
   { key: 'newest',    label: 'Newest Added' },
@@ -34,7 +29,6 @@ export default function FilterModal({
   onTagsChange,
   allItems = [],
 }) {
-  // Collect unique tags from all items
   const allTags = [...new Set(allItems.flatMap(i => i.tags || []))].sort();
 
   function toggleTag(tag) {
@@ -57,16 +51,9 @@ export default function FilterModal({
       transparent
       onRequestClose={onClose}
     >
-      {/* ── Backdrop ────────────────────────── */}
-      <TouchableOpacity
-        style={styles.backdrop}
-        activeOpacity={1}
-        onPress={onClose}
-      />
+      <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
 
-      {/* ── Sheet ───────────────────────────── */}
       <View style={styles.sheet}>
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleReset}>
             <Text style={styles.resetText}>Reset</Text>
@@ -79,7 +66,6 @@ export default function FilterModal({
 
         <ScrollView contentContainerStyle={styles.content}>
 
-          {/* ── Sort ─────────────────────────── */}
           <Text style={styles.sectionLabel}>SORT BY</Text>
           {SORT_OPTIONS.map(opt => (
             <TouchableOpacity
@@ -88,16 +74,12 @@ export default function FilterModal({
               onPress={() => onSortChange(opt.key)}
             >
               <Text style={styles.sortLabel}>{opt.label}</Text>
-              <View style={[
-                styles.radio,
-                sortBy === opt.key && styles.radioSelected,
-              ]}>
+              <View style={[styles.radio, sortBy === opt.key && styles.radioSelected]}>
                 {sortBy === opt.key && <View style={styles.radioDot} />}
               </View>
             </TouchableOpacity>
           ))}
 
-          {/* ── Tags ─────────────────────────── */}
           <Text style={[styles.sectionLabel, { marginTop: SPACING.lg }]}>
             FILTER BY TAGS
           </Text>
@@ -105,16 +87,10 @@ export default function FilterModal({
             {allTags.map(tag => (
               <TouchableOpacity
                 key={tag}
-                style={[
-                  styles.tagPill,
-                  activeTags.includes(tag) && styles.tagPillActive,
-                ]}
+                style={[styles.tagPill, activeTags.includes(tag) && styles.tagPillActive]}
                 onPress={() => toggleTag(tag)}
               >
-                <Text style={[
-                  styles.tagText,
-                  activeTags.includes(tag) && styles.tagTextActive,
-                ]}>
+                <Text style={[styles.tagText, activeTags.includes(tag) && styles.tagTextActive]}>
                   {tag}
                 </Text>
               </TouchableOpacity>
@@ -127,7 +103,6 @@ export default function FilterModal({
   );
 }
 
-// ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
   backdrop: {
     flex:            1,
@@ -135,17 +110,17 @@ const styles = StyleSheet.create({
   },
 
   sheet: {
-    backgroundColor:  COLORS.background,
+    backgroundColor:      COLORS.background,
     borderTopLeftRadius:  RADIUS.lg,
     borderTopRightRadius: RADIUS.lg,
-    maxHeight:        '75%',
-    paddingBottom:    SPACING.xxl,
+    maxHeight:            '75%',
+    paddingBottom:        SPACING.xxl,
   },
 
   header: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
     paddingHorizontal: SPACING.lg,
     paddingVertical:   SPACING.md,
     borderBottomWidth: 1,
@@ -153,20 +128,21 @@ const styles = StyleSheet.create({
   },
 
   headerTitle: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeLG,
-    fontWeight: '700',
     color:      COLORS.textDark,
   },
 
   resetText: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.textMedium,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.textMedium,
   },
 
   doneText: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeMD,
     color:      COLORS.primary,
-    fontWeight: '700',
   },
 
   content: {
@@ -174,34 +150,35 @@ const styles = StyleSheet.create({
   },
 
   sectionLabel: {
-    fontSize:    FONTS.sizeSM,
-    color:       COLORS.textMedium,
-    fontWeight:  '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeSM,
+    color:         COLORS.textMedium,
     letterSpacing: 2,
-    marginBottom: SPACING.sm,
+    marginBottom:  SPACING.sm,
   },
 
   sortRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-    paddingVertical: SPACING.md,
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
+    paddingVertical:   SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.cardBackground,
   },
 
   sortLabel: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.textDark,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.textDark,
   },
 
   radio: {
-    width:        22,
-    height:       22,
-    borderRadius: RADIUS.full,
-    borderWidth:  2,
-    borderColor:  COLORS.primaryLight,
-    alignItems:   'center',
+    width:          22,
+    height:         22,
+    borderRadius:   RADIUS.full,
+    borderWidth:    2,
+    borderColor:    COLORS.primaryLight,
+    alignItems:     'center',
     justifyContent: 'center',
   },
 
@@ -237,9 +214,9 @@ const styles = StyleSheet.create({
   },
 
   tagText: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textMedium,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textMedium,
   },
 
   tagTextActive: {

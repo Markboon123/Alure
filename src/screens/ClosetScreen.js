@@ -1,8 +1,6 @@
 // ─────────────────────────────────────────────
 // ClosetScreen — redesigned to match Figma spec
-//
-// Before running, install font packages:
-//   npx expo install @expo-google-fonts/cormorant-garamond @expo-google-fonts/jost expo-font
+// Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
 import React, { useState, useCallback } from 'react';
@@ -15,23 +13,13 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import {
-  useFonts,
-  CormorantGaramond_600SemiBold,
-} from '@expo-google-fonts/cormorant-garamond';
-import {
-  Jost_400Regular,
-  Jost_500Medium,
-  Jost_600SemiBold,
-} from '@expo-google-fonts/jost';
 
 import FilterModal from '../components/FilterModal';
-import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { getAllItems } from '../services/storageService';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -57,13 +45,6 @@ export default function ClosetScreen({ navigation }) {
   const [filterVisible,  setFilterVisible]  = useState(false);
   const [sortBy,         setSortBy]         = useState('newest');
   const [activeTags,     setActiveTags]     = useState([]);
-
-  const [fontsLoaded] = useFonts({
-    CormorantGaramond_600SemiBold,
-    Jost_400Regular,
-    Jost_500Medium,
-    Jost_600SemiBold,
-  });
 
   useFocusEffect(
     useCallback(() => {
@@ -97,7 +78,6 @@ export default function ClosetScreen({ navigation }) {
   }
 
   function renderItem({ item }) {
-    // Show first tag (style label like Casual / Active / Modern)
     const tag = item.tags?.[0] ?? item.style ?? null;
 
     return (
@@ -117,14 +97,6 @@ export default function ClosetScreen({ navigation }) {
           resizeMode="contain"
         />
       </TouchableOpacity>
-    );
-  }
-
-  if (!fontsLoaded) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator color={COLORS.primary} />
-      </SafeAreaView>
     );
   }
 
@@ -232,19 +204,11 @@ export default function ClosetScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex:            1,
-    backgroundColor: COLORS.background,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-
   container: {
     flex:            1,
     backgroundColor: COLORS.background,
   },
 
-  // ── Top nav bar ──────────────────────────────
   topBar: {
     flexDirection:     'row',
     justifyContent:    'space-between',
@@ -254,13 +218,12 @@ const styles = StyleSheet.create({
   },
 
   brandName: {
-    fontFamily:    'CormorantGaramond_600SemiBold',
+    fontFamily:    FONTS.brand,
     fontSize:      22,
     letterSpacing: 5,
     color:         COLORS.textDark,
   },
 
-  // ── Page title row ───────────────────────────
   header: {
     flexDirection:     'row',
     justifyContent:    'space-between',
@@ -271,14 +234,13 @@ const styles = StyleSheet.create({
   },
 
   headerTitle: {
-    fontFamily: 'Jost_500Medium',
+    fontFamily: FONTS.medium,
     fontSize:   34,
     color:      COLORS.textDark,
   },
 
-  // ── Category filter ──────────────────────────
   categoryContainer: {
-    height:     44,
+    height:       44,
     marginBottom: SPACING.sm,
   },
 
@@ -302,18 +264,17 @@ const styles = StyleSheet.create({
   },
 
   categoryPillText: {
-    fontFamily:    'Jost_400Regular',
+    fontFamily:    FONTS.regular,
     fontSize:      11,
     color:         COLORS.textMedium,
     letterSpacing: 0.8,
   },
 
   categoryPillTextActive: {
-    fontFamily: 'Jost_600SemiBold',
+    fontFamily: FONTS.bold,
     color:      COLORS.white,
   },
 
-  // ── Grid ────────────────────────────────────
   list: {
     flex: 1,
   },
@@ -354,7 +315,7 @@ const styles = StyleSheet.create({
   },
 
   tagBadgeText: {
-    fontFamily:    'Jost_500Medium',
+    fontFamily:    FONTS.medium,
     fontSize:      9,
     color:         COLORS.textDark,
     letterSpacing: 0.8,
@@ -362,14 +323,13 @@ const styles = StyleSheet.create({
 
   emptyText: {
     textAlign:         'center',
-    fontFamily:        'Jost_400Regular',
+    fontFamily:        FONTS.regular,
     color:             COLORS.textLight,
     fontSize:          14,
     marginTop:         SPACING.xxl,
     paddingHorizontal: SPACING.xl,
   },
 
-  // ── FAB ─────────────────────────────────────
   fab: {
     position:        'absolute',
     bottom:          SPACING.xl,

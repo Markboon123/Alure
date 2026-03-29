@@ -1,9 +1,6 @@
 // ─────────────────────────────────────────────
 // AddItemScreen
-// Lets users add a clothing item in two ways:
-//   1. Upload / take a photo  → Gemini analyzes it
-//   2. Paste a product URL    → scrape + pick image
-// After adding, navigates back to the Closet tab.
+// Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
 import React, { useState } from 'react';
@@ -17,7 +14,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -26,18 +22,14 @@ import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { saveItem } from '../services/storageService';
 import { analyzeClothingImage } from '../services/geminiService';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-
 export default function AddItemScreen({ navigation }) {
-  // ── State ─────────────────────────────────────
-  const [activeTab,     setActiveTab]     = useState('photo');  // 'photo' | 'url'
-  const [pickedImage,   setPickedImage]   = useState(null);     // { uri, base64 }
-  const [urlInput,      setUrlInput]      = useState('');
-  const [analyzing,     setAnalyzing]     = useState(false);
-  const [analyzedData,  setAnalyzedData]  = useState(null);     // from Gemini
-  const [saving,        setSaving]        = useState(false);
+  const [activeTab,    setActiveTab]    = useState('photo');
+  const [pickedImage,  setPickedImage]  = useState(null);
+  const [urlInput,     setUrlInput]     = useState('');
+  const [analyzing,    setAnalyzing]    = useState(false);
+  const [analyzedData, setAnalyzedData] = useState(null);
+  const [saving,       setSaving]       = useState(false);
 
-  // ── Photo picker ──────────────────────────────
   async function handlePickPhoto() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -58,7 +50,6 @@ export default function AddItemScreen({ navigation }) {
     }
   }
 
-  // ── Camera ────────────────────────────────────
   async function handleTakePhoto() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
@@ -78,7 +69,6 @@ export default function AddItemScreen({ navigation }) {
     }
   }
 
-  // ── Analyze with Gemini ───────────────────────
   async function handleAnalyze() {
     if (!pickedImage?.base64) return;
     setAnalyzing(true);
@@ -92,27 +82,20 @@ export default function AddItemScreen({ navigation }) {
       console.error('handleAnalyze error:', err);
       Alert.alert('Analysis failed', 'Could not analyze the image. You can still add it manually.');
       setAnalyzedData({
-        name: 'New Item',
-        category: 'top',
-        color: '',
-        tags: [],
-        style: 'Casual',
-        weather: ['Any'],
-        notes: '',
+        name: 'New Item', category: 'top', color: '',
+        tags: [], style: 'Casual', weather: ['Any'], notes: '',
       });
     } finally {
       setAnalyzing(false);
     }
   }
 
-  // ── Save item to storage ──────────────────────
   async function handleAddItem() {
     if (!pickedImage) {
       Alert.alert('No image', 'Please pick or take a photo first.');
       return;
     }
     if (!analyzedData) {
-      // Auto-analyze if not done yet
       await handleAnalyze();
       return;
     }
@@ -146,13 +129,10 @@ export default function AddItemScreen({ navigation }) {
     }
   }
 
-  // ── URL tab (placeholder for future expansion) ─
   function renderUrlTab() {
     return (
       <View style={styles.urlTab}>
-        <Text style={styles.urlLabel}>
-          Paste a product URL from any online store:
-        </Text>
+        <Text style={styles.urlLabel}>Paste a product URL from any online store:</Text>
         <TextInput
           style={styles.urlInput}
           value={urlInput}
@@ -166,9 +146,7 @@ export default function AddItemScreen({ navigation }) {
         <TouchableOpacity style={styles.urlFetchBtn}>
           <Text style={styles.urlFetchBtnText}>Find Images (Coming Soon)</Text>
         </TouchableOpacity>
-        <Text style={styles.comingSoonNote}>
-          🚧 URL import is coming in a future update!
-        </Text>
+        <Text style={styles.comingSoonNote}>🚧 URL import is coming in a future update!</Text>
       </View>
     );
   }
@@ -176,7 +154,7 @@ export default function AddItemScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
 
-      {/* ── Header ───────────────────────────── */}
+      {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.cancelText}>Cancel</Text>
@@ -185,7 +163,7 @@ export default function AddItemScreen({ navigation }) {
         <View style={{ width: 60 }} />
       </View>
 
-      {/* ── Tab switcher ─────────────────────── */}
+      {/* ── Tab switcher ── */}
       <View style={styles.tabs}>
         {['photo', 'url'].map(tab => (
           <TouchableOpacity
@@ -204,25 +182,19 @@ export default function AddItemScreen({ navigation }) {
 
         {activeTab === 'photo' ? (
           <>
-            {/* ── Image preview ────────────────── */}
+            {/* ── Image preview ── */}
             <View style={styles.imagePreviewContainer}>
               {pickedImage ? (
-                <Image
-                  source={{ uri: pickedImage.uri }}
-                  style={styles.imagePreview}
-                  resizeMode="contain"
-                />
+                <Image source={{ uri: pickedImage.uri }} style={styles.imagePreview} resizeMode="contain" />
               ) : (
                 <View style={styles.imagePlaceholder}>
                   <Text style={styles.imagePlaceholderIcon}>👕</Text>
-                  <Text style={styles.imagePlaceholderText}>
-                    No image selected
-                  </Text>
+                  <Text style={styles.imagePlaceholderText}>No image selected</Text>
                 </View>
               )}
             </View>
 
-            {/* ── Pick / Take buttons ───────────── */}
+            {/* ── Pick / Take buttons ── */}
             <View style={styles.imageActionRow}>
               <TouchableOpacity style={styles.imageActionBtn} onPress={handlePickPhoto}>
                 <Text style={styles.imageActionBtnText}>📁 Upload Photo</Text>
@@ -232,7 +204,7 @@ export default function AddItemScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            {/* ── Retake / Analyze ─────────────── */}
+            {/* ── Analyze ── */}
             {pickedImage && (
               <View style={styles.analyzeSection}>
                 {!analyzedData ? (
@@ -248,10 +220,8 @@ export default function AddItemScreen({ navigation }) {
                     )}
                   </TouchableOpacity>
                 ) : (
-                  /* ── Analyzed results card ─────── */
                   <View style={styles.analyzedCard}>
                     <Text style={styles.analyzedTitle}>AI Analysis</Text>
-
                     <InfoRow label="Name"     value={analyzedData.name} />
                     <InfoRow label="Category" value={analyzedData.category} />
                     <InfoRow label="Color"    value={analyzedData.color} />
@@ -277,7 +247,7 @@ export default function AddItemScreen({ navigation }) {
               </View>
             )}
 
-            {/* ── Add Item CTA ─────────────────── */}
+            {/* ── Add CTA ── */}
             {pickedImage && (
               <TouchableOpacity
                 style={[styles.addBtn, saving && { opacity: 0.6 }]}
@@ -303,7 +273,6 @@ export default function AddItemScreen({ navigation }) {
   );
 }
 
-// ── Small helper row ──────────────────────────
 function InfoRow({ label, value }) {
   return (
     <View style={styles.infoRow}>
@@ -313,7 +282,6 @@ function InfoRow({ label, value }) {
   );
 }
 
-// ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex:            1,
@@ -321,31 +289,31 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
     paddingHorizontal: SPACING.lg,
     paddingVertical:   SPACING.md,
   },
 
   cancelText: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.primary,
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.primary,
   },
 
   headerTitle: {
-    fontSize:   FONTS.sizeLG,
-    fontWeight: '800',
-    color:      COLORS.textDark,
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeLG,
+    color:         COLORS.textDark,
     letterSpacing: 2,
   },
 
   tabs: {
-    flexDirection:  'row',
+    flexDirection:     'row',
     paddingHorizontal: SPACING.lg,
-    gap:            SPACING.sm,
-    marginBottom:   SPACING.md,
+    gap:               SPACING.sm,
+    marginBottom:      SPACING.md,
   },
 
   tab: {
@@ -361,9 +329,9 @@ const styles = StyleSheet.create({
   },
 
   tabText: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textMedium,
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textMedium,
   },
 
   tabTextActive: {
@@ -400,8 +368,9 @@ const styles = StyleSheet.create({
   },
 
   imagePlaceholderText: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.textLight,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.textLight,
   },
 
   imageActionRow: {
@@ -420,9 +389,9 @@ const styles = StyleSheet.create({
   },
 
   imageActionBtnText: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textDark,
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textDark,
   },
 
   analyzeSection: {
@@ -437,9 +406,9 @@ const styles = StyleSheet.create({
   },
 
   analyzeBtnText: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeMD,
     color:      COLORS.white,
-    fontWeight: '700',
   },
 
   analyzedCard: {
@@ -449,9 +418,9 @@ const styles = StyleSheet.create({
   },
 
   analyzedTitle: {
-    fontSize:    FONTS.sizeLG,
-    fontWeight:  '700',
-    color:       COLORS.textDark,
+    fontFamily:   FONTS.bold,
+    fontSize:     FONTS.sizeLG,
+    color:        COLORS.textDark,
     marginBottom: SPACING.md,
   },
 
@@ -462,24 +431,25 @@ const styles = StyleSheet.create({
   },
 
   infoLabel: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeSM,
     color:      COLORS.textMedium,
-    fontWeight: '600',
     width:      80,
   },
 
   infoValue: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textDark,
-    flex:      1,
-    textTransform: 'capitalize',
+    fontFamily:     FONTS.regular,
+    fontSize:       FONTS.sizeSM,
+    color:          COLORS.textDark,
+    flex:           1,
+    textTransform:  'capitalize',
   },
 
   analyzedLabel: {
-    fontSize:    FONTS.sizeSM,
-    color:       COLORS.textMedium,
-    fontWeight:  '600',
-    marginTop:   SPACING.sm,
+    fontFamily:   FONTS.bold,
+    fontSize:     FONTS.sizeSM,
+    color:        COLORS.textMedium,
+    marginTop:    SPACING.sm,
     marginBottom: SPACING.xs,
   },
 
@@ -490,22 +460,23 @@ const styles = StyleSheet.create({
   },
 
   tagPill: {
-    backgroundColor: COLORS.white,
-    borderRadius:    RADIUS.full,
+    backgroundColor:   COLORS.white,
+    borderRadius:      RADIUS.full,
     paddingHorizontal: SPACING.sm,
     paddingVertical:   2,
   },
 
   tagText: {
-    fontSize:  FONTS.sizeXS,
-    color:     COLORS.textDark,
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeXS,
+    color:      COLORS.textDark,
   },
 
   analyzedNotes: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textMedium,
-    fontStyle: 'italic',
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textMedium,
+    fontStyle:  'italic',
     lineHeight: FONTS.sizeSM * 1.5,
   },
 
@@ -518,23 +489,24 @@ const styles = StyleSheet.create({
   },
 
   addBtnText: {
-    fontSize:   FONTS.sizeMD,
-    color:      COLORS.white,
-    fontWeight: '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeMD,
+    color:         COLORS.white,
     letterSpacing: 0.5,
   },
 
-  // URL tab
   urlTab: {
     gap: SPACING.md,
   },
 
   urlLabel: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.textMedium,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.textMedium,
   },
 
   urlInput: {
+    fontFamily:      FONTS.regular,
     backgroundColor: COLORS.cardBackground,
     borderRadius:    RADIUS.md,
     padding:         SPACING.md,
@@ -550,15 +522,16 @@ const styles = StyleSheet.create({
   },
 
   urlFetchBtnText: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.white,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.white,
   },
 
   comingSoonNote: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textLight,
-    textAlign: 'center',
-    fontStyle: 'italic',
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textLight,
+    textAlign:  'center',
+    fontStyle:  'italic',
   },
 });

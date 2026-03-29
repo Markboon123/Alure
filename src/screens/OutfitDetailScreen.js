@@ -1,11 +1,6 @@
 // ─────────────────────────────────────────────
 // OutfitDetailScreen
-// Shows a full view of a single outfit with:
-//   - 2×2 clothing grid
-//   - Style tags
-//   - Pieces list (images + names)
-//   - Favorite toggle
-//   - Worn dates history
+// Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
 import React, { useState, useEffect } from 'react';
@@ -29,16 +24,12 @@ const GRID_SIZE    = (SCREEN_WIDTH - SPACING.lg * 2 - SPACING.sm) / 2;
 export default function OutfitDetailScreen({ route, navigation }) {
   const { outfitId } = route.params;
 
-  const [outfit,    setOutfit]    = useState(null);
-  const [items,     setItems]     = useState([]);
+  const [outfit, setOutfit] = useState(null);
+  const [items,  setItems]  = useState([]);
 
-  // ── Load outfit + items ───────────────────────
   useEffect(() => {
     async function load() {
-      const [allOutfits, allItems] = await Promise.all([
-        getAllOutfits(),
-        getAllItems(),
-      ]);
+      const [allOutfits, allItems] = await Promise.all([getAllOutfits(), getAllItems()]);
       const found = allOutfits.find(o => o.id === outfitId);
       setOutfit(found || null);
       setItems(allItems);
@@ -54,7 +45,6 @@ export default function OutfitDetailScreen({ route, navigation }) {
     );
   }
 
-  // ── Resolve item objects ──────────────────────
   const outfitItems = outfit.itemIds
     ?.map(id => items.find(i => i.id === id))
     .filter(Boolean) || [];
@@ -65,13 +55,11 @@ export default function OutfitDetailScreen({ route, navigation }) {
   const shoes  = outfitItems.find(i => i.category === 'shoes');
   const grid   = [jacket, bottom, top, shoes];
 
-  // ── Toggle favorite ───────────────────────────
   async function handleToggleFavorite() {
     await toggleOutfitFavorite(outfit.id);
     setOutfit(prev => ({ ...prev, isFavorite: !prev.isFavorite }));
   }
 
-  // ── Format worn date ──────────────────────────
   function formatDate(dateStr) {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -82,14 +70,13 @@ export default function OutfitDetailScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
 
-      {/* ── Back ─────────────────────────────── */}
       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
         <Text style={styles.backText}>‹ Back</Text>
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
-        {/* ── Outfit name ──────────────────────── */}
+        {/* ── Outfit name ── */}
         <View style={styles.titleRow}>
           <Text style={styles.outfitName}>{outfit.name}</Text>
           <TouchableOpacity onPress={handleToggleFavorite}>
@@ -99,7 +86,7 @@ export default function OutfitDetailScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* ── Style tags ────────────────────────── */}
+        {/* ── Style tags ── */}
         <View style={styles.tagsRow}>
           {outfit.tags?.map(tag => (
             <View key={tag} style={styles.tagPill}>
@@ -108,13 +95,10 @@ export default function OutfitDetailScreen({ route, navigation }) {
           ))}
         </View>
 
-        {/* ── 2×2 grid ─────────────────────────── */}
+        {/* ── 2×2 grid ── */}
         <View style={styles.grid}>
           {grid.map((item, idx) => (
-            <View
-              key={idx}
-              style={[styles.gridCell, { width: GRID_SIZE, height: GRID_SIZE }]}
-            >
+            <View key={idx} style={[styles.gridCell, { width: GRID_SIZE, height: GRID_SIZE }]}>
               {item ? (
                 <Image
                   source={{ uri: item.imageUri }}
@@ -128,7 +112,7 @@ export default function OutfitDetailScreen({ route, navigation }) {
           ))}
         </View>
 
-        {/* ── Pieces list ──────────────────────── */}
+        {/* ── Pieces list ── */}
         <Text style={styles.sectionLabel}>PIECES</Text>
         {outfitItems.map(item => (
           <TouchableOpacity
@@ -149,12 +133,10 @@ export default function OutfitDetailScreen({ route, navigation }) {
           </TouchableOpacity>
         ))}
 
-        {/* ── Worn dates ───────────────────────── */}
+        {/* ── Worn dates ── */}
         {outfit.wornDates && outfit.wornDates.length > 0 && (
           <>
-            <Text style={[styles.sectionLabel, { marginTop: SPACING.lg }]}>
-              WORN DATES
-            </Text>
+            <Text style={[styles.sectionLabel, { marginTop: SPACING.lg }]}>WORN DATES</Text>
             {outfit.wornDates.map((date, idx) => (
               <Text key={idx} style={styles.wornDate}>
                 {idx === 0 ? '• Most recently: ' : '• '}{formatDate(date)}
@@ -168,7 +150,6 @@ export default function OutfitDetailScreen({ route, navigation }) {
   );
 }
 
-// ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex:            1,
@@ -181,9 +162,9 @@ const styles = StyleSheet.create({
   },
 
   backText: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.primary,
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.primary,
   },
 
   scrollContent: {
@@ -199,15 +180,15 @@ const styles = StyleSheet.create({
   },
 
   outfitName: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeXL,
-    fontWeight: '800',
     color:      COLORS.textDark,
     flex:       1,
   },
 
   heartBtn: {
-    fontSize:  32,
-    color:     COLORS.textLight,
+    fontSize: 32,
+    color:    COLORS.textLight,
   },
 
   heartActive: {
@@ -215,10 +196,10 @@ const styles = StyleSheet.create({
   },
 
   tagsRow: {
-    flexDirection:  'row',
-    flexWrap:       'wrap',
-    gap:            SPACING.sm,
-    marginBottom:   SPACING.lg,
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:           SPACING.sm,
+    marginBottom:  SPACING.lg,
   },
 
   tagPill: {
@@ -229,9 +210,9 @@ const styles = StyleSheet.create({
   },
 
   tagText: {
-    fontSize:    FONTS.sizeSM,
-    color:       COLORS.textMedium,
-    fontWeight:  '600',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeSM,
+    color:         COLORS.textMedium,
     letterSpacing: 0.5,
   },
 
@@ -260,26 +241,26 @@ const styles = StyleSheet.create({
   },
 
   sectionLabel: {
-    fontSize:    FONTS.sizeSM,
-    color:       COLORS.textMedium,
-    fontWeight:  '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeSM,
+    color:         COLORS.textMedium,
     letterSpacing: 2,
-    marginBottom: SPACING.sm,
+    marginBottom:  SPACING.sm,
   },
 
   pieceRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    gap:            SPACING.md,
-    paddingVertical: SPACING.sm,
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               SPACING.md,
+    paddingVertical:   SPACING.sm,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.cardBackground,
   },
 
   pieceThumb: {
-    width:        60,
-    height:       60,
-    borderRadius: RADIUS.sm,
+    width:           60,
+    height:          60,
+    borderRadius:    RADIUS.sm,
     backgroundColor: COLORS.cardBackground,
   },
 
@@ -288,12 +269,13 @@ const styles = StyleSheet.create({
   },
 
   pieceName: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.textDark,
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.textDark,
   },
 
   pieceCategory: {
+    fontFamily:     FONTS.regular,
     fontSize:       FONTS.sizeSM,
     color:          COLORS.textLight,
     textTransform:  'capitalize',
@@ -305,15 +287,17 @@ const styles = StyleSheet.create({
   },
 
   wornDate: {
+    fontFamily:   FONTS.regular,
     fontSize:     FONTS.sizeSM,
     color:        COLORS.textMedium,
     paddingVertical: SPACING.xs,
   },
 
   notFound: {
-    textAlign: 'center',
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.textLight,
-    marginTop: SPACING.xxl,
+    fontFamily: FONTS.regular,
+    textAlign:  'center',
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.textLight,
+    marginTop:  SPACING.xxl,
   },
 });

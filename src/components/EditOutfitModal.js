@@ -1,9 +1,6 @@
 // ─────────────────────────────────────────────
 // EditOutfitModal Component
-// Full-screen modal that lets users:
-//   ✕  remove a piece from the outfit
-//   ↻  swap a piece for another item of the same
-//      category from their closet
+// Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
 import React, { useState } from 'react';
@@ -17,7 +14,6 @@ import {
   FlatList,
   StyleSheet,
   Dimensions,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
@@ -28,32 +24,24 @@ const ITEM_SIZE    = (SCREEN_WIDTH - SPACING.lg * 2 - SPACING.sm) / 2;
 export default function EditOutfitModal({
   visible,
   outfit,
-  items,           // all wardrobe items
+  items,
   onClose,
   onSave,
 }) {
-  // Local copy of itemIds so changes don't affect parent until saved
-  const [currentIds, setCurrentIds] = useState(outfit?.itemIds || []);
-
-  // Which category is being swapped (null = swap panel closed)
+  const [currentIds,   setCurrentIds]   = useState(outfit?.itemIds || []);
   const [swapCategory, setSwapCategory] = useState(null);
 
-  // The items actually in this outfit
   const outfitItems = currentIds.map(id => items.find(i => i.id === id)).filter(Boolean);
 
-  // ── Remove a piece ────────────────────────────
   function handleRemove(itemId) {
     setCurrentIds(prev => prev.filter(id => id !== itemId));
   }
 
-  // ── Open swap panel for a category ───────────
   function handleSwapPress(category) {
     setSwapCategory(category);
   }
 
-  // ── Perform the swap ─────────────────────────
   function handleSwapSelect(newItem) {
-    // Remove any existing item in that category, then add the new one
     const withoutCategory = currentIds.filter(id => {
       const found = items.find(i => i.id === id);
       return found?.category !== swapCategory;
@@ -62,16 +50,12 @@ export default function EditOutfitModal({
     setSwapCategory(null);
   }
 
-  // ── Save & close ──────────────────────────────
   function handleSave() {
     onSave({ ...outfit, itemIds: currentIds });
   }
 
-  // Items available to swap in (same category, not already in outfit)
   const swapCandidates = swapCategory
-    ? items.filter(
-        i => i.category === swapCategory && !currentIds.includes(i.id)
-      )
+    ? items.filter(i => i.category === swapCategory && !currentIds.includes(i.id))
     : [];
 
   return (
@@ -83,7 +67,7 @@ export default function EditOutfitModal({
     >
       <SafeAreaView style={styles.container}>
 
-        {/* ── Header ───────────────────────── */}
+        {/* ── Header ── */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <Text style={styles.closeBtnText}>✕</Text>
@@ -96,7 +80,7 @@ export default function EditOutfitModal({
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
 
-          {/* ── Outfit items grid ─────────────── */}
+          {/* ── Outfit items grid ── */}
           <Text style={styles.sectionLabel}>PIECES</Text>
           <View style={styles.itemsGrid}>
             {outfitItems.map(item => (
@@ -107,33 +91,24 @@ export default function EditOutfitModal({
                   resizeMode="cover"
                 />
 
-                {/* Category label */}
                 <View style={styles.categoryBadge}>
                   <Text style={styles.categoryBadgeText}>
                     {item.category.toUpperCase()}
                   </Text>
                 </View>
 
-                {/* Remove (✕) button */}
-                <TouchableOpacity
-                  style={styles.removeBtn}
-                  onPress={() => handleRemove(item.id)}
-                >
+                <TouchableOpacity style={styles.removeBtn} onPress={() => handleRemove(item.id)}>
                   <Text style={styles.removeBtnText}>✕</Text>
                 </TouchableOpacity>
 
-                {/* Swap (↻) button */}
-                <TouchableOpacity
-                  style={styles.swapBtn}
-                  onPress={() => handleSwapPress(item.category)}
-                >
+                <TouchableOpacity style={styles.swapBtn} onPress={() => handleSwapPress(item.category)}>
                   <Text style={styles.swapBtnText}>↻</Text>
                 </TouchableOpacity>
               </View>
             ))}
           </View>
 
-          {/* ── Swap panel ─────────────────────── */}
+          {/* ── Swap panel ── */}
           {swapCategory && (
             <View style={styles.swapPanel}>
               <View style={styles.swapPanelHeader}>
@@ -157,10 +132,7 @@ export default function EditOutfitModal({
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.swapList}
                   renderItem={({ item }) => (
-                    <TouchableOpacity
-                      onPress={() => handleSwapSelect(item)}
-                      style={styles.swapCandidate}
-                    >
+                    <TouchableOpacity onPress={() => handleSwapSelect(item)} style={styles.swapCandidate}>
                       <Image
                         source={{ uri: item.imageUri }}
                         style={styles.swapCandidateImage}
@@ -182,7 +154,6 @@ export default function EditOutfitModal({
   );
 }
 
-// ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex:            1,
@@ -190,9 +161,9 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
     paddingHorizontal: SPACING.lg,
     paddingVertical:   SPACING.md,
     borderBottomWidth: 1,
@@ -209,54 +180,54 @@ const styles = StyleSheet.create({
   },
 
   closeBtnText: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeMD,
     color:      COLORS.textDark,
-    fontWeight: '600',
   },
 
   headerTitle: {
-    fontSize:   FONTS.sizeLG,
-    fontWeight: '700',
-    color:      COLORS.textDark,
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeLG,
+    color:         COLORS.textDark,
     letterSpacing: 1,
   },
 
   saveBtn: {
-    backgroundColor: COLORS.primary,
+    backgroundColor:   COLORS.primary,
     paddingHorizontal: SPACING.md,
     paddingVertical:   SPACING.xs,
     borderRadius:      RADIUS.full,
   },
 
   saveBtnText: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeMD,
     color:      COLORS.white,
-    fontWeight: '600',
   },
 
   scrollContent: {
-    padding: SPACING.lg,
+    padding:       SPACING.lg,
     paddingBottom: SPACING.xxl,
   },
 
   sectionLabel: {
-    fontSize:    FONTS.sizeSM,
-    color:       COLORS.textMedium,
-    fontWeight:  '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeSM,
+    color:         COLORS.textMedium,
     letterSpacing: 2,
-    marginBottom: SPACING.md,
+    marginBottom:  SPACING.md,
   },
 
   itemsGrid: {
-    flexDirection:  'row',
-    flexWrap:       'wrap',
-    gap:            SPACING.sm,
-    marginBottom:   SPACING.xl,
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:           SPACING.sm,
+    marginBottom:  SPACING.xl,
   },
 
   itemCell: {
-    borderRadius: RADIUS.md,
-    overflow:     'hidden',
+    borderRadius:    RADIUS.md,
+    overflow:        'hidden',
     backgroundColor: COLORS.cardBackground,
   },
 
@@ -266,19 +237,19 @@ const styles = StyleSheet.create({
   },
 
   categoryBadge: {
-    position:        'absolute',
-    top:             SPACING.xs,
-    left:            SPACING.xs,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    borderRadius:    RADIUS.sm,
+    position:          'absolute',
+    top:               SPACING.xs,
+    left:              SPACING.xs,
+    backgroundColor:   'rgba(0,0,0,0.55)',
+    borderRadius:      RADIUS.sm,
     paddingHorizontal: SPACING.xs,
     paddingVertical:   2,
   },
 
   categoryBadgeText: {
-    fontSize:   FONTS.sizeXS,
-    color:      COLORS.white,
-    fontWeight: '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeXS,
+    color:         COLORS.white,
     letterSpacing: 0.5,
   },
 
@@ -295,9 +266,9 @@ const styles = StyleSheet.create({
   },
 
   removeBtnText: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeSM,
     color:      COLORS.white,
-    fontWeight: '700',
   },
 
   swapBtn: {
@@ -313,12 +284,11 @@ const styles = StyleSheet.create({
   },
 
   swapBtnText: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeLG,
     color:      COLORS.white,
-    fontWeight: '700',
   },
 
-  // ── Swap panel ──────────────────────────────
   swapPanel: {
     backgroundColor: COLORS.cardBackground,
     borderRadius:    RADIUS.lg,
@@ -334,27 +304,27 @@ const styles = StyleSheet.create({
   },
 
   swapPanelTitle: {
-    fontSize:   FONTS.sizeMD,
-    fontWeight: '700',
-    color:      COLORS.textDark,
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeMD,
+    color:         COLORS.textDark,
     letterSpacing: 1,
   },
 
   swapPanelClose: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.primary,
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.primary,
   },
 
   swapList: {
-    gap:            SPACING.sm,
-    paddingBottom:  SPACING.sm,
+    gap:           SPACING.sm,
+    paddingBottom: SPACING.sm,
   },
 
   swapCandidate: {
-    width:           100,
-    marginRight:     SPACING.sm,
-    alignItems:      'center',
+    width:       100,
+    marginRight: SPACING.sm,
+    alignItems:  'center',
   },
 
   swapCandidateImage: {
@@ -365,15 +335,17 @@ const styles = StyleSheet.create({
   },
 
   swapCandidateName: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textMedium,
-    textAlign: 'center',
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textMedium,
+    textAlign:  'center',
   },
 
   emptyText: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textLight,
-    textAlign: 'center',
-    padding:   SPACING.md,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textLight,
+    textAlign:  'center',
+    padding:    SPACING.md,
   },
 });

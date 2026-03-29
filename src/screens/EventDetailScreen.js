@@ -1,10 +1,6 @@
 // ─────────────────────────────────────────────
 // EventDetailScreen
-// Expanded view of a single event with:
-//   - Hero image
-//   - Category + name + details
-//   - Dress code suggestion
-//   - "I'll Go" button (placeholder / future)
+// Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
 import React from 'react';
@@ -37,23 +33,19 @@ export default function EventDetailScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
 
-      {/* ── Back ─────────────────────────────── */}
       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
         <Text style={styles.backText}>‹ Back</Text>
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
-        {/* ── Hero image ────────────────────── */}
         <Image
           source={{ uri: event.imageUri }}
           style={styles.heroImage}
           resizeMode="cover"
         />
 
-        {/* ── Content card ─────────────────── */}
         <View style={styles.contentCard}>
-          {/* Category badge */}
           <View style={[styles.categoryBadge, { backgroundColor: catStyle.bg }]}>
             <Text style={[styles.categoryText, { color: catStyle.text }]}>
               {event.category.toUpperCase()}
@@ -67,7 +59,6 @@ export default function EventDetailScreen({ route, navigation }) {
 
           <Text style={styles.description}>{event.description}</Text>
 
-          {/* Dress code */}
           {event.dressCode && (
             <View style={styles.dressCodeBox}>
               <Text style={styles.dressCodeLabel}>👔 DRESS CODE</Text>
@@ -76,7 +67,6 @@ export default function EventDetailScreen({ route, navigation }) {
           )}
         </View>
 
-        {/* ── CTA (placeholder) ──────────────── */}
         <TouchableOpacity style={styles.ctaBtn}>
           <Text style={styles.ctaBtnText}>I'll Go (Coming Soon)</Text>
         </TouchableOpacity>
@@ -86,7 +76,6 @@ export default function EventDetailScreen({ route, navigation }) {
   );
 }
 
-// ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex:            1,
@@ -99,9 +88,9 @@ const styles = StyleSheet.create({
   },
 
   backText: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.white,
-    fontWeight: '600',
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.white,
   },
 
   scrollContent: {
@@ -132,20 +121,21 @@ const styles = StyleSheet.create({
   },
 
   categoryText: {
-    fontSize:  FONTS.sizeXS,
-    fontWeight: '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeXS,
     letterSpacing: 0.5,
   },
 
   eventName: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.size2XL,
-    fontWeight: '800',
     color:      COLORS.textDark,
   },
 
   eventMeta: {
-    fontSize:  FONTS.sizeSM,
-    color:     COLORS.textMedium,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeSM,
+    color:      COLORS.textMedium,
   },
 
   divider: {
@@ -155,8 +145,9 @@ const styles = StyleSheet.create({
   },
 
   description: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.textMedium,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.textMedium,
     lineHeight: FONTS.sizeMD * 1.6,
   },
 
@@ -169,16 +160,16 @@ const styles = StyleSheet.create({
   },
 
   dressCodeLabel: {
-    fontSize:    FONTS.sizeXS,
-    color:       COLORS.textMedium,
-    fontWeight:  '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeXS,
+    color:         COLORS.textMedium,
     letterSpacing: 1,
   },
 
   dressCodeValue: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeMD,
     color:      COLORS.textDark,
-    fontWeight: '600',
   },
 
   ctaBtn: {
@@ -191,8 +182,8 @@ const styles = StyleSheet.create({
   },
 
   ctaBtnText: {
+    fontFamily: FONTS.bold,
     fontSize:   FONTS.sizeMD,
     color:      COLORS.white,
-    fontWeight: '700',
   },
 });

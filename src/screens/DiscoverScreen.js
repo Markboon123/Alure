@@ -1,12 +1,6 @@
 // ─────────────────────────────────────────────
-// Discover Screen  (first tab)
-// Greets the user and shows up to 3 AI-suggested
-// outfit cards for the day. Users can:
-//   👎 skip (thumbs-down) — trains AI negatively
-//   ❤️  wear it          — marks outfit + pieces as worn
-//   👍 like              — trains AI positively
-//   🔖 save              — adds to favorite outfits
-//   ✏️  edit             — opens EditOutfitModal
+// DiscoverScreen  (first tab)
+// Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
@@ -20,7 +14,6 @@ import {
   Alert,
   ActivityIndicator,
   FlatList,
-  Animated,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,11 +34,10 @@ export default function DiscoverScreen({ navigation }) {
   const [outfits,     setOutfits]     = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading,     setLoading]     = useState(true);
-  const [editOutfit,  setEditOutfit]  = useState(null);   // outfit being edited
+  const [editOutfit,  setEditOutfit]  = useState(null);
   const [savedIds,    setSavedIds]    = useState(new Set());
   const flatListRef = useRef(null);
 
-  // ── Load data when tab comes into focus ──────
   useFocusEffect(
     useCallback(() => {
       loadData();
@@ -61,7 +53,6 @@ export default function DiscoverScreen({ navigation }) {
       ]);
       setItems(loadedItems);
 
-      // Try to get AI suggestions; fall back to saved outfits / mock data
       const aiOutfits = await suggestOutfits({
         items: loadedItems,
         weather: weather,
@@ -70,28 +61,25 @@ export default function DiscoverScreen({ navigation }) {
       });
 
       if (aiOutfits && aiOutfits.length > 0) {
-        // Map AI suggestions to full outfit objects with item lookups
         const resolved = aiOutfits.map((suggestion, idx) => ({
-          id:        `ai_outfit_${Date.now()}_${idx}`,
-          name:      suggestion.name,
-          tags:      suggestion.tags,
-          itemIds:   suggestion.itemIds,
-          style:     suggestion.style,
+          id:         `ai_outfit_${Date.now()}_${idx}`,
+          name:       suggestion.name,
+          tags:       suggestion.tags,
+          itemIds:    suggestion.itemIds,
+          style:      suggestion.style,
           isFavorite: false,
-          wornDates: [],
-          aiScore:   0.85,
-          reason:    suggestion.reason,
+          wornDates:  [],
+          aiScore:    0.85,
+          reason:     suggestion.reason,
         }));
         setOutfits(resolved);
       } else {
-        // Fall back to stored / mock outfits
         const displayOutfits = loadedOutfits.length > 0
           ? loadedOutfits.slice(0, 3)
           : MOCK_OUTFITS.slice(0, 3);
         setOutfits(displayOutfits);
       }
 
-      // Track which are already saved
       const favSet = new Set(loadedOutfits.filter(o => o.isFavorite).map(o => o.id));
       setSavedIds(favSet);
     } catch (err) {
@@ -102,21 +90,17 @@ export default function DiscoverScreen({ navigation }) {
     }
   }
 
-  // ── Load weather on mount ─────────────────
   useEffect(() => {
     fetchWeather().then(w => setWeather(w)).catch(() => {});
   }, []);
 
-  // ── Keep activeIndex in sync with scroll ─────
   function handleScroll(event) {
     const offsetX = event.nativeEvent.contentOffset.x;
     const newIndex = Math.round(offsetX / SCREEN_WIDTH);
     setActiveIndex(newIndex);
   }
 
-  // ── Feedback actions ──────────────────────────
   function handleThumbsDown() {
-    // Skip to next card (trains AI negatively — placeholder for now)
     const nextIndex = activeIndex + 1;
     if (nextIndex < outfits.length) {
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
@@ -130,14 +114,13 @@ export default function DiscoverScreen({ navigation }) {
     if (!outfit) return;
     try {
       await markOutfitWorn(outfit.id);
-      Alert.alert("Outfit logged! 🎉", "Your pieces have been marked as worn today.");
+      Alert.alert('Outfit logged! 🎉', 'Your pieces have been marked as worn today.');
     } catch (err) {
       console.error('handleWearIt error:', err);
     }
   }
 
   function handleThumbsUp() {
-    // Positive signal — placeholder for future AI training
     Alert.alert('Noted! 👍', "We'll suggest more outfits like this.");
   }
 
@@ -169,21 +152,16 @@ export default function DiscoverScreen({ navigation }) {
     saveOutfit(updatedOutfit);
   }
 
-  // ── Dot indicators ────────────────────────────
   function renderDots() {
     return (
       <View style={styles.dotsRow}>
         {outfits.map((_, i) => (
-          <View
-            key={i}
-            style={[styles.dot, i === activeIndex && styles.dotActive]}
-          />
+          <View key={i} style={[styles.dot, i === activeIndex && styles.dotActive]} />
         ))}
       </View>
     );
   }
 
-  // ── Render each outfit card in the FlatList ──
   function renderCard({ item: outfit }) {
     return (
       <View style={{ width: SCREEN_WIDTH, paddingHorizontal: SPACING.lg }}>
@@ -204,8 +182,7 @@ export default function DiscoverScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-
-        {/* ── Header ─────────────────────────── */}
+        {/* ── Header ── */}
         <View style={styles.header}>
           <View>
             <Text style={styles.hiText}>Hi, {userName}</Text>
@@ -217,7 +194,7 @@ export default function DiscoverScreen({ navigation }) {
           </View>
         </View>
 
-        {/* ── Outfit cards carousel ─────────── */}
+        {/* ── Carousel ── */}
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
@@ -226,7 +203,6 @@ export default function DiscoverScreen({ navigation }) {
         ) : (
           <>
             {renderDots()}
-
             <FlatList
               ref={flatListRef}
               data={outfits}
@@ -242,10 +218,9 @@ export default function DiscoverScreen({ navigation }) {
           </>
         )}
 
-        {/* ── Feedback buttons ──────────────── */}
+        {/* ── Feedback buttons ── */}
         {!loading && (
           <View style={styles.feedbackRow}>
-            {/* Thumbs down */}
             <TouchableOpacity
               style={styles.feedbackSide}
               onPress={handleThumbsDown}
@@ -254,7 +229,6 @@ export default function DiscoverScreen({ navigation }) {
               <Text style={styles.feedbackIcon}>👎</Text>
             </TouchableOpacity>
 
-            {/* I'll wear it — primary CTA */}
             <TouchableOpacity
               style={styles.wearItButton}
               onPress={handleWearIt}
@@ -264,7 +238,6 @@ export default function DiscoverScreen({ navigation }) {
               <Text style={styles.wearItText}>I'LL WEAR IT</Text>
             </TouchableOpacity>
 
-            {/* Thumbs up */}
             <TouchableOpacity
               style={styles.feedbackSide}
               onPress={handleThumbsUp}
@@ -274,10 +247,8 @@ export default function DiscoverScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         )}
-
       </ScrollView>
 
-      {/* ── Edit Outfit Modal ─────────────────── */}
       {editOutfit && (
         <EditOutfitModal
           visible={!!editOutfit}
@@ -291,10 +262,9 @@ export default function DiscoverScreen({ navigation }) {
   );
 }
 
-// ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex:            1,
     backgroundColor: COLORS.background,
   },
 
@@ -303,25 +273,26 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    flexDirection:  'row',
-    justifyContent: 'space-between',
-    alignItems:     'flex-start',
+    flexDirection:     'row',
+    justifyContent:    'space-between',
+    alignItems:        'flex-start',
     paddingHorizontal: SPACING.lg,
-    paddingTop:     SPACING.md,
-    paddingBottom:  SPACING.lg,
+    paddingTop:        SPACING.md,
+    paddingBottom:     SPACING.lg,
   },
 
   hiText: {
-    fontSize:   FONTS.sizeMD,
-    color:      COLORS.textMedium,
+    fontFamily:   FONTS.regular,
+    fontSize:     FONTS.sizeMD,
+    color:        COLORS.textMedium,
     marginBottom: SPACING.xs,
   },
 
   headlineText: {
-    fontSize:   FONTS.size3XL,
-    fontWeight: '800',
-    color:      COLORS.textDark,
-    lineHeight: FONTS.size3XL * 1.1,
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.size3XL * 1.1,
+    color:         COLORS.textDark,
+    lineHeight:    FONTS.size3XL * 1.2,
     letterSpacing: 1,
   },
 
@@ -337,35 +308,36 @@ const styles = StyleSheet.create({
   },
 
   weatherText: {
+    fontFamily: FONTS.medium,
     fontSize:   FONTS.sizeMD,
     color:      COLORS.textMedium,
-    fontWeight: '500',
   },
 
   loadingContainer: {
-    alignItems:  'center',
-    paddingTop:  SPACING.xxl,
-    gap:         SPACING.md,
+    alignItems: 'center',
+    paddingTop: SPACING.xxl,
+    gap:        SPACING.md,
   },
 
   loadingText: {
-    fontSize:  FONTS.sizeMD,
-    color:     COLORS.textMedium,
-    fontStyle: 'italic',
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.textMedium,
+    fontStyle:  'italic',
   },
 
   dotsRow: {
-    flexDirection:  'row',
-    justifyContent: 'flex-end',
+    flexDirection:     'row',
+    justifyContent:    'flex-end',
     paddingHorizontal: SPACING.lg,
-    gap:            SPACING.xs,
-    marginBottom:   SPACING.sm,
+    gap:               SPACING.xs,
+    marginBottom:      SPACING.sm,
   },
 
   dot: {
-    width:        24,
-    height:       4,
-    borderRadius: 2,
+    width:           24,
+    height:          4,
+    borderRadius:    2,
     backgroundColor: COLORS.primaryLight,
   },
 
@@ -379,21 +351,21 @@ const styles = StyleSheet.create({
   },
 
   feedbackRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:            SPACING.xl,
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'center',
+    gap:               SPACING.xl,
     paddingHorizontal: SPACING.lg,
-    marginTop:      SPACING.sm,
+    marginTop:         SPACING.sm,
   },
 
   feedbackSide: {
-    width:          56,
-    height:         56,
-    borderRadius:   RADIUS.full,
+    width:           56,
+    height:          56,
+    borderRadius:    RADIUS.full,
     backgroundColor: COLORS.white,
-    alignItems:     'center',
-    justifyContent: 'center',
+    alignItems:      'center',
+    justifyContent:  'center',
     ...SHADOW.small,
   },
 
@@ -412,16 +384,16 @@ const styles = StyleSheet.create({
   },
 
   wearItHeart: {
-    fontSize: 24,
-    color:    COLORS.white,
+    fontSize:     24,
+    color:        COLORS.white,
     marginBottom: SPACING.xs,
   },
 
   wearItText: {
-    fontSize:    FONTS.sizeSM,
-    color:       COLORS.white,
-    fontWeight:  '700',
+    fontFamily:    FONTS.bold,
+    fontSize:      FONTS.sizeSM,
+    color:         COLORS.white,
     letterSpacing: 0.5,
-    textAlign:   'center',
+    textAlign:     'center',
   },
 });
