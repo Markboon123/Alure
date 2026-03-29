@@ -30,6 +30,14 @@ export default function OutfitCard({
   const bottom = items.find(i => outfit.itemIds.includes(i.id) && i.category === 'bottom');
   const shoes  = items.find(i => outfit.itemIds.includes(i.id) && i.category === 'shoes');
 
+  // Fill empty slots with accessories or any unassigned items
+  const assignedIds = new Set([jacket?.id, top?.id, bottom?.id, shoes?.id].filter(Boolean));
+  const extras = items.filter(i => outfit.itemIds.includes(i.id) && !assignedIds.has(i.id));
+  let extraIdx = 0;
+  const [slot1, slot2, slot3, slot4] = [jacket, bottom, top, shoes].map(
+    slot => slot ?? (extras[extraIdx++] || null)
+  );
+
   return (
     <View style={styles.card}>
 
@@ -45,12 +53,12 @@ export default function OutfitCard({
       {/* ── 2×2 clothing grid ── */}
       <View style={styles.grid}>
         <View style={styles.gridRow}>
-          <ClothingCell item={jacket} size={CELL_SIZE} />
-          <ClothingCell item={bottom} size={CELL_SIZE} />
+          <ClothingCell item={slot1} size={CELL_SIZE} />
+          <ClothingCell item={slot2} size={CELL_SIZE} />
         </View>
         <View style={styles.gridRow}>
-          <ClothingCell item={top}   size={CELL_SIZE} />
-          <ClothingCell item={shoes} size={CELL_SIZE} />
+          <ClothingCell item={slot3} size={CELL_SIZE} />
+          <ClothingCell item={slot4} size={CELL_SIZE} />
         </View>
       </View>
 
