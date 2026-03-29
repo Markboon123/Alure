@@ -217,7 +217,7 @@ export default function DiscoverScreen({ navigation, route }) {
           <Ionicons name="settings-outline" size={22} color={COLORS.textDark} />
         </TouchableOpacity>
         <Text style={styles.brandName}>ALURÉ</Text>
-        <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel="Help">
+        <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel="Help" onPress={() => navigation.navigate('Help')}>
           <Ionicons name="help-circle-outline" size={22} color={COLORS.textDark} />
         </TouchableOpacity>
       </View>
@@ -241,9 +241,15 @@ export default function DiscoverScreen({ navigation, route }) {
             {/* Row 1: greeting alone */}
             <Text style={styles.hiText}>Hi, {userName}</Text>
 
-            {/* Row 2: TODAY'S (left)  |  sparkle button (right) */}
+            {/* Row 2: TODAY'S + weather (left)  |  sparkle (right) */}
             <View style={styles.todaysRow}>
-              <Text style={styles.headlineText}>TODAY'S</Text>
+              <View style={styles.todaysLeft}>
+                <Text style={styles.headlineText}>TODAY'S</Text>
+                <View style={styles.weatherBadge}>
+                  <Ionicons name="sunny-outline" size={18} color={COLORS.textMedium} />
+                  <Text style={styles.weatherText}>{weather}</Text>
+                </View>
+              </View>
               <TouchableOpacity
                 style={styles.sparkleButton}
                 onPress={() => navigation.navigate('GenerateOutfit')}
@@ -253,14 +259,8 @@ export default function DiscoverScreen({ navigation, route }) {
               </TouchableOpacity>
             </View>
 
-            {/* Row 3: OUTFITS + weather aligned together */}
-            <View style={styles.outfitsRow}>
-              <Text style={styles.headlineText}>OUTFITS</Text>
-              <View style={styles.weatherBadge}>
-                <Ionicons name="sunny-outline" size={20} color={COLORS.textMedium} />
-                <Text style={styles.weatherText}>{weather}</Text>
-              </View>
-            </View>
+            {/* Row 3: OUTFITS alone */}
+            <Text style={styles.headlineText}>OUTFITS</Text>
           </>
         )}
       </View>
@@ -381,18 +381,24 @@ const styles = StyleSheet.create({
     color:      COLORS.textMedium,
   },
 
-  // Row 2: TODAY'S  |  [✨]
+  // Row 1: greeting + sparkle
+  greetingRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  },
+
+  // Row 2: TODAY'S + weather + sparkle
   todaysRow: {
     flexDirection:  'row',
     alignItems:     'center',
     justifyContent: 'space-between',
   },
 
-  // Row 3: OUTFITS  ☀ temp
-  outfitsRow: {
+  todaysLeft: {
     flexDirection: 'row',
     alignItems:    'center',
-    gap:           SPACING.md,
+    gap:           SPACING.sm,
   },
 
   headlineText: {
