@@ -7,7 +7,6 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
@@ -17,6 +16,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 import OutfitCard from '../components/OutfitCard';
 import EditOutfitModal from '../components/EditOutfitModal';
@@ -25,27 +25,43 @@ import { getAllItems, getAllOutfits, saveOutfit, markOutfitWorn } from '../servi
 import { suggestOutfits, fetchWeather } from '../services/geminiService';
 import { MOCK_OUTFITS } from '../data/mockData';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
+const SCREEN_WIDTH  = Dimensions.get('window').width;
+// Mirror OutfitCard's sizing so we can fix the carousel height
+const CARD_WIDTH    = SCREEN_WIDTH - SPACING.lg * 2;
+const CELL_SIZE     = (CARD_WIDTH - SPACING.sm * 3) / 2 - 10;
+// card padding(16) + tags+margin(32) + grid(2*cell+gap) + action+margin(44)
+const CARD_HEIGHT   = 16 + 32 + (2 * CELL_SIZE + SPACING.sm) + 44;
+const CAROUSEL_HEIGHT = CARD_HEIGHT + 24; // 24 = dots row
 
-export default function DiscoverScreen({ navigation }) {
-  const [userName,    setUserName]    = useState('Swayam');
-  const [weather,     setWeather]     = useState('57°F');
-  const [items,       setItems]       = useState([]);
-  const [outfits,     setOutfits]     = useState([]);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [loading,     setLoading]     = useState(true);
-  const [editOutfit,  setEditOutfit]  = useState(null);
-  const [savedIds,    setSavedIds]    = useState(new Set());
+export default function DiscoverScreen({ navigation, route }) {
+  const [userName,         setUserName]         = useState('Swayam');
+  const [weather,          setWeather]          = useState('57°F');
+  const [items,            setItems]            = useState([]);
+  const [outfits,          setOutfits]          = useState([]);
+  const [activeIndex,      setActiveIndex]      = useState(0);
+  const [loading,          setLoading]          = useState(true);
+  const [editOutfit,       setEditOutfit]       = useState(null);
+  const [savedIds,         setSavedIds]         = useState(new Set());
+  const [thumbsDownActive, setThumbsDownActive] = useState(false);
+  const [thumbsUpActive,   setThumbsUpActive]   = useState(false);
   const flatListRef = useRef(null);
+
+  // Generated theme from AI prompt screen (replaces "TODAY'S OUTFITS" + weather)
+  const generatedTheme    = route.params?.theme;
+  const generatedOutfits  = route.params?.generatedOutfits;
 
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [])
+    }, [route.params?.generatedOutfits])
   );
 
   async function loadData() {
     setLoading(true);
+    // Reset carousel position
+    setActiveIndex(0);
+    setThumbsDownActive(false);
+    setThumbsUpActive(false);
     try {
       const [loadedItems, loadedOutfits] = await Promise.all([
         getAllItems(),
@@ -53,31 +69,37 @@ export default function DiscoverScreen({ navigation }) {
       ]);
       setItems(loadedItems);
 
-      const aiOutfits = await suggestOutfits({
-        items: loadedItems,
-        weather: weather,
-        preferences: ['Bold', 'Colorful', 'Comfy'],
-        outfitCount: 3,
-      });
-
-      if (aiOutfits && aiOutfits.length > 0) {
-        const resolved = aiOutfits.map((suggestion, idx) => ({
-          id:         `ai_outfit_${Date.now()}_${idx}`,
-          name:       suggestion.name,
-          tags:       suggestion.tags,
-          itemIds:    suggestion.itemIds,
-          style:      suggestion.style,
-          isFavorite: false,
-          wornDates:  [],
-          aiScore:    0.85,
-          reason:     suggestion.reason,
-        }));
-        setOutfits(resolved);
+      // If we have AI-prompt-generated outfits from GenerateOutfitScreen, use them
+      if (generatedOutfits && generatedOutfits.length > 0) {
+        setOutfits(generatedOutfits);
       } else {
-        const displayOutfits = loadedOutfits.length > 0
-          ? loadedOutfits.slice(0, 3)
-          : MOCK_OUTFITS.slice(0, 3);
-        setOutfits(displayOutfits);
+        // Normal flow: ask Gemini for today's suggestions
+        const aiOutfits = await suggestOutfits({
+          items: loadedItems,
+          weather: weather,
+          preferences: ['Bold', 'Colorful', 'Comfy'],
+          outfitCount: 3,
+        });
+
+        if (aiOutfits && aiOutfits.length > 0) {
+          const resolved = aiOutfits.map((suggestion, idx) => ({
+            id:         `ai_outfit_${Date.now()}_${idx}`,
+            name:       suggestion.name,
+            tags:       suggestion.tags,
+            itemIds:    suggestion.itemIds,
+            style:      suggestion.style,
+            isFavorite: false,
+            wornDates:  [],
+            aiScore:    0.85,
+            reason:     suggestion.reason,
+          }));
+          setOutfits(resolved);
+        } else {
+          const displayOutfits = loadedOutfits.length > 0
+            ? loadedOutfits.slice(0, 3)
+            : MOCK_OUTFITS.slice(0, 3);
+          setOutfits(displayOutfits);
+        }
       }
 
       const favSet = new Set(loadedOutfits.filter(o => o.isFavorite).map(o => o.id));
@@ -101,11 +123,16 @@ export default function DiscoverScreen({ navigation }) {
   }
 
   function handleThumbsDown() {
-    const nextIndex = activeIndex + 1;
-    if (nextIndex < outfits.length) {
-      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-    } else {
-      Alert.alert('No more outfits', 'Check back tomorrow for fresh suggestions!');
+    const nowActive = !thumbsDownActive;
+    setThumbsDownActive(nowActive);
+    setThumbsUpActive(false);
+    if (nowActive) {
+      const nextIndex = activeIndex + 1;
+      if (nextIndex < outfits.length) {
+        flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+      } else {
+        Alert.alert('No more outfits', 'Check back tomorrow for fresh suggestions!');
+      }
     }
   }
 
@@ -114,14 +141,19 @@ export default function DiscoverScreen({ navigation }) {
     if (!outfit) return;
     try {
       await markOutfitWorn(outfit.id);
-      Alert.alert('Outfit logged! 🎉', 'Your pieces have been marked as worn today.');
+      Alert.alert('Outfit logged!', 'Your pieces have been marked as worn today.');
     } catch (err) {
       console.error('handleWearIt error:', err);
     }
   }
 
   function handleThumbsUp() {
-    Alert.alert('Noted! 👍', "We'll suggest more outfits like this.");
+    const nowActive = !thumbsUpActive;
+    setThumbsUpActive(nowActive);
+    setThumbsDownActive(false);
+    if (nowActive) {
+      Alert.alert('Noted!', "We'll suggest more outfits like this.");
+    }
   }
 
   async function handleSave() {
@@ -178,76 +210,122 @@ export default function DiscoverScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* ── Header ── */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.hiText}>Hi, {userName}</Text>
-            <Text style={styles.headlineText}>TODAY'S{'\n'}OUTFITS</Text>
-          </View>
-          <View style={styles.weatherBadge}>
-            <Text style={styles.weatherIcon}>☀️</Text>
-            <Text style={styles.weatherText}>{weather}</Text>
-          </View>
-        </View>
 
-        {/* ── Carousel ── */}
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Styling your day...</Text>
+      {/* ── Top Nav Bar — matches ClosetScreen ── */}
+      <View style={styles.topBar}>
+        <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel="Settings">
+          <Ionicons name="settings-outline" size={22} color={COLORS.textDark} />
+        </TouchableOpacity>
+        <Text style={styles.brandName}>ALURÉ</Text>
+        <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel="Help">
+          <Ionicons name="help-circle-outline" size={22} color={COLORS.textDark} />
+        </TouchableOpacity>
+      </View>
+
+      {/* ── Header ── */}
+      <View style={styles.header}>
+        {generatedTheme ? (
+          /* Generated theme: single block with sparkle */
+          <View style={styles.headerBottomRow}>
+            <Text style={styles.headlineText} numberOfLines={3}>{generatedTheme}</Text>
+            <TouchableOpacity
+              style={styles.sparkleButton}
+              onPress={() => navigation.navigate('GenerateOutfit')}
+              accessibilityLabel="Generate outfit with AI"
+            >
+              <Ionicons name="sparkles" size={28} color={COLORS.primary} />
+            </TouchableOpacity>
           </View>
         ) : (
           <>
-            {renderDots()}
-            <FlatList
-              ref={flatListRef}
-              data={outfits}
-              keyExtractor={o => o.id}
-              renderItem={renderCard}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onScroll={handleScroll}
-              scrollEventThrottle={16}
-              style={styles.carousel}
-            />
+            {/* Row 1: greeting alone */}
+            <Text style={styles.hiText}>Hi, {userName}</Text>
+
+            {/* Row 2: TODAY'S (left)  |  sparkle button (right) */}
+            <View style={styles.todaysRow}>
+              <Text style={styles.headlineText}>TODAY'S</Text>
+              <TouchableOpacity
+                style={styles.sparkleButton}
+                onPress={() => navigation.navigate('GenerateOutfit')}
+                accessibilityLabel="Generate outfit with AI"
+              >
+                <Ionicons name="sparkles" size={26} color={COLORS.primary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Row 3: OUTFITS + weather aligned together */}
+            <View style={styles.outfitsRow}>
+              <Text style={styles.headlineText}>OUTFITS</Text>
+              <View style={styles.weatherBadge}>
+                <Ionicons name="sunny-outline" size={20} color={COLORS.textMedium} />
+                <Text style={styles.weatherText}>{weather}</Text>
+              </View>
+            </View>
           </>
         )}
+      </View>
 
-        {/* ── Feedback buttons ── */}
-        {!loading && (
-          <View style={styles.feedbackRow}>
-            <TouchableOpacity
-              style={styles.feedbackSide}
-              onPress={handleThumbsDown}
-              accessibilityLabel="Skip outfit"
-            >
-              <Text style={styles.feedbackIcon}>👎</Text>
-            </TouchableOpacity>
+      {/* ── Carousel + Dots ── */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Styling your day...</Text>
+        </View>
+      ) : (
+        <View style={styles.carouselArea}>
+          {renderDots()}
+          <FlatList
+            ref={flatListRef}
+            data={outfits}
+            keyExtractor={o => o.id}
+            renderItem={renderCard}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            style={styles.carousel}
+          />
+        </View>
+      )}
 
-            <TouchableOpacity
-              style={styles.wearItButton}
-              onPress={handleWearIt}
-              accessibilityLabel="I'll wear this outfit"
-            >
-              <Text style={styles.wearItHeart}>♥</Text>
-              <Text style={styles.wearItText}>I'LL WEAR IT</Text>
-            </TouchableOpacity>
+      {/* ── Feedback buttons ── */}
+      {!loading && (
+        <View style={styles.feedbackRow}>
+          <TouchableOpacity
+            style={[styles.feedbackSide, thumbsDownActive && styles.feedbackSideActive]}
+            onPress={handleThumbsDown}
+            accessibilityLabel="Skip outfit"
+          >
+            <Ionicons
+              name="thumbs-down"
+              size={22}
+              color={thumbsDownActive ? COLORS.white : COLORS.textMedium}
+            />
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.feedbackSide}
-              onPress={handleThumbsUp}
-              accessibilityLabel="Like outfit"
-            >
-              <Text style={styles.feedbackIcon}>👍</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
+          <TouchableOpacity
+            style={styles.wearItButton}
+            onPress={handleWearIt}
+            accessibilityLabel="I'll wear this outfit"
+          >
+            <Ionicons name="heart" size={18} color={COLORS.white} style={{ marginBottom: 4 }} />
+            <Text style={styles.wearItText}>I'LL WEAR IT</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.feedbackSide, thumbsUpActive && styles.feedbackSideActive]}
+            onPress={handleThumbsUp}
+            accessibilityLabel="Like outfit"
+          >
+            <Ionicons
+              name="thumbs-up"
+              size={22}
+              color={thumbsUpActive ? COLORS.white : COLORS.textMedium}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {editOutfit && (
         <EditOutfitModal
@@ -268,55 +346,91 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
 
-  scrollContent: {
-    paddingBottom: SPACING.xl,
-  },
-
-  header: {
+  // ── Top bar — mirrors ClosetScreen exactly ──
+  topBar: {
     flexDirection:     'row',
     justifyContent:    'space-between',
-    alignItems:        'flex-start',
+    alignItems:        'center',
     paddingHorizontal: SPACING.lg,
-    paddingTop:        SPACING.md,
-    paddingBottom:     SPACING.lg,
+    paddingVertical:   SPACING.sm + 2,
+  },
+
+  brandName: {
+    fontFamily:    FONTS.brand,
+    fontSize:      22,
+    letterSpacing: 5,
+    color:         COLORS.textDark,
+  },
+
+  // ── Header ──
+  header: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop:        SPACING.xs,
+    paddingBottom:     SPACING.xs,
+  },
+
+  headerBottomRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
   },
 
   hiText: {
-    fontFamily:   FONTS.regular,
-    fontSize:     FONTS.sizeMD,
-    color:        COLORS.textMedium,
-    marginBottom: SPACING.xs,
+    fontFamily: FONTS.regular,
+    fontSize:   FONTS.sizeMD,
+    color:      COLORS.textMedium,
+  },
+
+  // Row 2: TODAY'S  |  [✨]
+  todaysRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  },
+
+  // Row 3: OUTFITS  ☀ temp
+  outfitsRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           SPACING.md,
   },
 
   headlineText: {
     fontFamily:    FONTS.bold,
-    fontSize:      FONTS.size3XL * 1.1,
+    fontSize:      FONTS.size2XL,
     color:         COLORS.textDark,
-    lineHeight:    FONTS.size3XL * 1.2,
+    lineHeight:    FONTS.size2XL * 1.1,
     letterSpacing: 1,
+  },
+
+  sparkleButton: {
+    width:           48,
+    height:          48,
+    borderRadius:    RADIUS.full,
+    backgroundColor: COLORS.cardBackground,
+    alignItems:      'center',
+    justifyContent:  'center',
+    ...SHADOW.small,
   },
 
   weatherBadge: {
     flexDirection: 'row',
     alignItems:    'center',
-    gap:           SPACING.xs,
-    marginTop:     SPACING.xs,
-  },
-
-  weatherIcon: {
-    fontSize: FONTS.sizeLG,
+    gap:           5,
   },
 
   weatherText: {
-    fontFamily: FONTS.medium,
-    fontSize:   FONTS.sizeMD,
+    fontFamily: FONTS.bold,
+    fontSize:   FONTS.sizeLG,
     color:      COLORS.textMedium,
   },
 
+  // ── Loading ──
   loadingContainer: {
-    alignItems: 'center',
-    paddingTop: SPACING.xxl,
-    gap:        SPACING.md,
+    flex:           1,
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            SPACING.md,
   },
 
   loadingText: {
@@ -324,6 +438,11 @@ const styles = StyleSheet.create({
     fontSize:   FONTS.sizeMD,
     color:      COLORS.textMedium,
     fontStyle:  'italic',
+  },
+
+  // ── Carousel ──
+  carouselArea: {
+    height: CAROUSEL_HEIGHT,
   },
 
   dotsRow: {
@@ -347,21 +466,23 @@ const styles = StyleSheet.create({
   },
 
   carousel: {
-    marginBottom: SPACING.lg,
+    flexGrow: 0,
   },
 
+  // ── Feedback row ──
   feedbackRow: {
     flexDirection:     'row',
     alignItems:        'center',
     justifyContent:    'center',
     gap:               SPACING.xl,
     paddingHorizontal: SPACING.lg,
-    marginTop:         SPACING.sm,
+    paddingTop:        SPACING.xs,
+    paddingBottom:     SPACING.sm,
   },
 
   feedbackSide: {
-    width:           56,
-    height:          56,
+    width:           52,
+    height:          52,
     borderRadius:    RADIUS.full,
     backgroundColor: COLORS.white,
     alignItems:      'center',
@@ -369,13 +490,13 @@ const styles = StyleSheet.create({
     ...SHADOW.small,
   },
 
-  feedbackIcon: {
-    fontSize: 22,
+  feedbackSideActive: {
+    backgroundColor: COLORS.primary,
   },
 
   wearItButton: {
-    width:           120,
-    height:          120,
+    width:           84,
+    height:          84,
     borderRadius:    RADIUS.full,
     backgroundColor: COLORS.primary,
     alignItems:      'center',
@@ -383,15 +504,9 @@ const styles = StyleSheet.create({
     ...SHADOW.medium,
   },
 
-  wearItHeart: {
-    fontSize:     24,
-    color:        COLORS.white,
-    marginBottom: SPACING.xs,
-  },
-
   wearItText: {
     fontFamily:    FONTS.bold,
-    fontSize:      FONTS.sizeSM,
+    fontSize:      9,
     color:         COLORS.white,
     letterSpacing: 0.5,
     textAlign:     'center',
