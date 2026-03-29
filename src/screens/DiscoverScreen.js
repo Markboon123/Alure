@@ -241,15 +241,9 @@ export default function DiscoverScreen({ navigation, route }) {
             {/* Row 1: greeting alone */}
             <Text style={styles.hiText}>Hi, {userName}</Text>
 
-            {/* Row 2: TODAY'S + weather (left)  |  sparkle button (right) */}
+            {/* Row 2: TODAY'S (left)  |  sparkle button (right) */}
             <View style={styles.todaysRow}>
-              <View style={styles.todaysLeft}>
-                <Text style={styles.headlineText}>TODAY'S</Text>
-                <View style={styles.weatherBadge}>
-                  <Ionicons name="sunny-outline" size={20} color={COLORS.textMedium} />
-                  <Text style={styles.weatherText}>{weather}</Text>
-                </View>
-              </View>
+              <Text style={styles.headlineText}>TODAY'S</Text>
               <TouchableOpacity
                 style={styles.sparkleButton}
                 onPress={() => navigation.navigate('GenerateOutfit')}
@@ -259,8 +253,14 @@ export default function DiscoverScreen({ navigation, route }) {
               </TouchableOpacity>
             </View>
 
-            {/* Row 3: OUTFITS */}
-            <Text style={styles.headlineText}>OUTFITS</Text>
+            {/* Row 3: OUTFITS + weather aligned together */}
+            <View style={styles.outfitsRow}>
+              <Text style={styles.headlineText}>OUTFITS</Text>
+              <View style={styles.weatherBadge}>
+                <Ionicons name="sunny-outline" size={20} color={COLORS.textMedium} />
+                <Text style={styles.weatherText}>{weather}</Text>
+              </View>
+            </View>
           </>
         )}
       </View>
@@ -381,14 +381,15 @@ const styles = StyleSheet.create({
     color:      COLORS.textMedium,
   },
 
-  // Row 2: [TODAY'S + weather]  |  [✨]
+  // Row 2: TODAY'S  |  [✨]
   todaysRow: {
     flexDirection:  'row',
     alignItems:     'center',
     justifyContent: 'space-between',
   },
 
-  todaysLeft: {
+  // Row 3: OUTFITS  ☀ temp
+  outfitsRow: {
     flexDirection: 'row',
     alignItems:    'center',
     gap:           SPACING.md,
