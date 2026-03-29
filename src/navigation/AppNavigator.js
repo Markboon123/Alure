@@ -53,7 +53,16 @@ function BottomTabBar({ state, navigation }) {
           <TouchableOpacity
             key={route.key}
             style={styles.tabItem}
-            onPress={() => navigation.navigate(route.name)}
+            onPress={() => {
+              if (route.name === 'Discover') {
+                navigation.navigate('Discover', {
+                  screen: 'DiscoverHome',
+                  params: { theme: null, generatedOutfits: null },
+                });
+              } else {
+                navigation.navigate(route.name);
+              }
+            }}
             accessibilityLabel={tab.name}
           >
             <View style={[styles.iconWrap, focused && styles.iconWrapFocused]}>
