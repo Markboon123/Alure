@@ -166,6 +166,56 @@ Return ONLY valid JSON:
   }
 }
 
+// ── Generate Outfit From Custom Prompt ───────
+// Takes a user's free-text prompt (e.g. "formal blue for a cold day")
+// and generates outfit suggestions from their wardrobe that match.
+export async function generateOutfitFromPrompt({ items, prompt, outfitCount = 3 }) {
+  const wardrobeDescription = items
+    .map(item =>
+      `id:${item.id} | ${item.category} | ${item.name} | tags:${item.tags.join(',')}`
+    )
+    .join('\n');
+
+  const promptText = `
+You are a personal stylist AI.
+User request: "${prompt}"
+
+User's wardrobe:
+${wardrobeDescription}
+
+Task: Suggest exactly ${outfitCount} outfit combinations that best match the user's request.
+Rules:
+- Each outfit MUST contain exactly 4 items: one jacket (or omit if none fits), one top, one bottom, one shoes item.
+- If a jacket is omitted, include 3 items.
+- Only use item IDs from the wardrobe above.
+- Match the style/occasion/vibe described by the user.
+- Return ONLY valid JSON with no markdown fences.
+
+Return format (array of ${outfitCount} objects):
+[
+  {
+    "name": "outfit name",
+    "tags": ["tag1", "tag2", "tag3"],
+    "itemIds": ["id1", "id2", "id3", "id4"],
+    "style": "Bold|Colorful|Casual|Comfy|Smart|Formal",
+    "reason": "one sentence explaining why this outfit matches the request"
+  }
+]
+`;
+
+  try {
+    const model = getTextModel();
+    const result = await model.generateContent(promptText);
+    const text = result.response.text();
+    const clean = text.replace(/```json|```/g, '').trim();
+    const outfits = JSON.parse(clean);
+    return outfits;
+  } catch (err) {
+    console.error('generateOutfitFromPrompt error:', err);
+    return [];
+  }
+}
+
 // ── Fetch weather (open-meteo, no key needed) ─
 // Returns a human-readable weather string.
 export async function fetchWeather(lat = 40.7934, lon = -77.8600) {

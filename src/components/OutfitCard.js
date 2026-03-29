@@ -12,10 +12,11 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
 const CARD_WIDTH = Dimensions.get('window').width - SPACING.lg * 2;
-const CELL_SIZE  = (CARD_WIDTH - SPACING.sm * 3) / 2;
+const CELL_SIZE  = (CARD_WIDTH - SPACING.sm * 3) / 2 - 10;
 
 export default function OutfitCard({
   outfit,
@@ -43,10 +44,14 @@ export default function OutfitCard({
 
       {/* ── 2×2 clothing grid ── */}
       <View style={styles.grid}>
-        <ClothingCell item={jacket} size={CELL_SIZE} />
-        <ClothingCell item={bottom} size={CELL_SIZE} />
-        <ClothingCell item={top}    size={CELL_SIZE} />
-        <ClothingCell item={shoes}  size={CELL_SIZE} />
+        <View style={styles.gridRow}>
+          <ClothingCell item={jacket} size={CELL_SIZE} />
+          <ClothingCell item={bottom} size={CELL_SIZE} />
+        </View>
+        <View style={styles.gridRow}>
+          <ClothingCell item={top}   size={CELL_SIZE} />
+          <ClothingCell item={shoes} size={CELL_SIZE} />
+        </View>
       </View>
 
       {/* ── Action icons ── */}
@@ -56,7 +61,11 @@ export default function OutfitCard({
           onPress={onSave}
           accessibilityLabel="Save outfit"
         >
-          <Text style={[styles.actionIcon, isSaved && { color: COLORS.primary }]}>🔖</Text>
+          <Ionicons
+            name={isSaved ? 'bookmark' : 'bookmark-outline'}
+            size={19}
+            color={isSaved ? COLORS.primary : COLORS.textMedium}
+          />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -64,7 +73,7 @@ export default function OutfitCard({
           onPress={onEdit}
           accessibilityLabel="Edit outfit"
         >
-          <Text style={styles.actionIcon}>✏️</Text>
+          <Ionicons name="pencil-outline" size={19} color={COLORS.textMedium} />
         </TouchableOpacity>
       </View>
     </View>
@@ -91,7 +100,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.cardBackground,
     borderRadius:    RADIUS.lg,
-    padding:         SPACING.md,
+    padding:         SPACING.sm,
     width:           CARD_WIDTH,
     ...SHADOW.small,
   },
@@ -99,7 +108,7 @@ const styles = StyleSheet.create({
   tagsRow: {
     flexDirection: 'row',
     gap:           SPACING.sm,
-    marginBottom:  SPACING.md,
+    marginBottom:  SPACING.xs,
   },
 
   tagPill: {
@@ -117,10 +126,12 @@ const styles = StyleSheet.create({
   },
 
   grid: {
+    gap: SPACING.sm,
+  },
+
+  gridRow: {
     flexDirection: 'row',
-    flexWrap:      'wrap',
     gap:           SPACING.sm,
-    justifyContent:'center',
   },
 
   cell: {
@@ -143,7 +154,7 @@ const styles = StyleSheet.create({
     flexDirection:  'row',
     justifyContent: 'flex-end',
     gap:            SPACING.sm,
-    marginTop:      SPACING.md,
+    marginTop:      SPACING.xs,
   },
 
   iconButton: {
@@ -156,7 +167,4 @@ const styles = StyleSheet.create({
     ...SHADOW.small,
   },
 
-  actionIcon: {
-    fontSize: 18,
-  },
 });

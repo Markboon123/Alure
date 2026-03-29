@@ -23,12 +23,14 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+import { Ionicons } from '@expo/vector-icons';
 
 import { COLORS, FONTS, SPACING } from '../constants/theme';
 
 // ── Screens ───────────────────────────────────
-import DiscoverScreen     from '../screens/DiscoverScreen';
-import ClosetScreen       from '../screens/ClosetScreen';
+import DiscoverScreen        from '../screens/DiscoverScreen';
+import GenerateOutfitScreen  from '../screens/GenerateOutfitScreen';
+import ClosetScreen          from '../screens/ClosetScreen';
 import ItemDetailScreen   from '../screens/ItemDetailScreen';
 import AddItemScreen      from '../screens/AddItemScreen';
 import OutfitsScreen      from '../screens/OutfitsScreen';
@@ -40,14 +42,14 @@ const Tab   = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 // ── Tab icon component ────────────────────────
-// Uses emoji since we don't have an icon library configured;
-// swap in Ionicons or similar for polished icons.
-function TabIcon({ icon, label, focused }) {
+function TabIcon({ ionicon, label, focused }) {
   return (
     <View style={tabIconStyles.wrapper}>
-      <Text style={[tabIconStyles.icon, focused && tabIconStyles.iconFocused]}>
-        {icon}
-      </Text>
+      <Ionicons
+        name={ionicon}
+        size={22}
+        color={focused ? COLORS.primary : COLORS.textLight}
+      />
       <Text style={[tabIconStyles.label, focused && tabIconStyles.labelFocused]}>
         {label.toUpperCase()}
       </Text>
@@ -61,19 +63,12 @@ const tabIconStyles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop:     SPACING.xs,
   },
-  icon: {
-    fontSize:  20,
-    opacity:   0.5,
-  },
-  iconFocused: {
-    opacity: 1,
-  },
   label: {
-    fontSize:    FONTS.sizeXS,
-    color:       COLORS.textLight,
-    fontWeight:  '700',
+    fontSize:      FONTS.sizeXS,
+    color:         COLORS.textLight,
+    fontFamily:    FONTS.bold,
     letterSpacing: 0.5,
-    marginTop:   2,
+    marginTop:     2,
   },
   labelFocused: {
     color: COLORS.primary,
@@ -85,7 +80,8 @@ const tabIconStyles = StyleSheet.create({
 function DiscoverStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="DiscoverHome" component={DiscoverScreen} />
+      <Stack.Screen name="DiscoverHome"   component={DiscoverScreen} />
+      <Stack.Screen name="GenerateOutfit" component={GenerateOutfitScreen} />
     </Stack.Navigator>
   );
 }
@@ -137,7 +133,7 @@ function MainTabs() {
         component={DiscoverStack}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="🧭" label="Discover" focused={focused} />
+            <TabIcon ionicon="compass-outline" label="Discover" focused={focused} />
           ),
         }}
       />
@@ -146,7 +142,7 @@ function MainTabs() {
         component={ClosetStack}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="👔" label="Closet" focused={focused} />
+            <TabIcon ionicon="grid-outline" label="Closet" focused={focused} />
           ),
         }}
       />
@@ -155,7 +151,7 @@ function MainTabs() {
         component={OutfitsStack}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="🧥" label="Outfits" focused={focused} />
+            <TabIcon ionicon="shirt-outline" label="Outfits" focused={focused} />
           ),
         }}
       />
@@ -164,7 +160,7 @@ function MainTabs() {
         component={EventsStack}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="📅" label="Events" focused={focused} />
+            <TabIcon ionicon="calendar-outline" label="Events" focused={focused} />
           ),
         }}
       />
