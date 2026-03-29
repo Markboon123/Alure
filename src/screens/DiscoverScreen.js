@@ -43,6 +43,7 @@ export default function DiscoverScreen({ navigation, route }) {
   const [feedbackLiked,    setFeedbackLiked]    = useState([]);
   const [feedbackDisliked, setFeedbackDisliked] = useState([]);
   const flatListRef = useRef(null);
+  const hasLoaded   = useRef(false);
 
   // Generated theme from AI prompt screen (replaces "TODAY'S OUTFITS" + weather)
   const generatedTheme    = route.params?.theme;
@@ -50,7 +51,11 @@ export default function DiscoverScreen({ navigation, route }) {
 
   useFocusEffect(
     useCallback(() => {
-      loadData();
+      // Only reload if: first load, or new generated outfits arrived from another screen
+      if (!hasLoaded.current || generatedOutfits) {
+        hasLoaded.current = true;
+        loadData();
+      }
     }, [route.params?.generatedOutfits])
   );
 
