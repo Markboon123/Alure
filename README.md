@@ -44,7 +44,7 @@ College students already have a lot to balance, but they also want to make the m
 
 
 ### 🚀 Final Application
-![Final App](https://your-final-app-image-link.png)
+<img src="https://i.imgur.com/qceORm1.png" width="650" alt="Final App">
 
 ---
 
