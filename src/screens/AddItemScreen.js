@@ -32,6 +32,43 @@ export default function AddItemScreen({ navigation }) {
   const [saving,       setSaving]       = useState(false);
 
   async function handlePickPhoto() {
+    Alert.alert(
+      'Add Photo',
+      'Choose how to add your item photo',
+      [
+        {
+          text: 'Take Photo',
+          onPress: handleTakePhoto,
+        },
+        {
+          text: 'Choose from Library',
+          onPress: handleLibraryPhoto,
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  }
+
+  async function handleTakePhoto() {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission needed', 'Allow camera access to take photos.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+      base64: true,
+    });
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      setPickedImage({ uri: asset.uri, base64: asset.base64 });
+      setAnalyzedData(null);
+    }
+  }
+
+  async function handleLibraryPhoto() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       Alert.alert('Permission needed', 'Allow access to your photo library to add items.');
