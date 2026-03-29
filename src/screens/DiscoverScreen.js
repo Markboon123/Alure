@@ -24,6 +24,7 @@ import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { getAllItems, getAllOutfits, saveOutfit, markOutfitWorn } from '../services/storageService';
 import { suggestOutfits, fetchWeather } from '../services/geminiService';
 import { MOCK_OUTFITS } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 
 const SCREEN_WIDTH  = Dimensions.get('window').width;
 // Mirror OutfitCard's sizing so we can fix the carousel height
@@ -34,7 +35,8 @@ const CARD_HEIGHT   = 16 + 32 + (2 * CELL_SIZE + SPACING.sm) + 44;
 const CAROUSEL_HEIGHT = CARD_HEIGHT + 24; // 24 = dots row
 
 export default function DiscoverScreen({ navigation, route }) {
-  const [userName,         setUserName]         = useState('Swayam');
+  const { user } = useAuth();
+  const userName = user?.name || 'there';
   const [weather,          setWeather]          = useState('57°F');
   const [items,            setItems]            = useState([]);
   const [outfits,          setOutfits]          = useState([]);
