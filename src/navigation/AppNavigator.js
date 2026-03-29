@@ -10,6 +10,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { COLORS, FONTS, SPACING } from '../constants/theme';
 
@@ -31,8 +32,8 @@ const Stack  = createStackNavigator();
 // ── Tab definitions ───────────────────────────
 const TABS = [
   { name: 'Discover', ionicon: 'compass-outline' },
-  { name: 'Closet',   ionicon: 'shirt-outline'   },
-  { name: 'Outfits',  ionicon: 'layers-outline'  },
+  { name: 'Closet',   ionicon: 'hanger'            },
+  { name: 'Outfits',  ionicon: 'shirt-outline'   },
   { name: 'Events',   ionicon: 'calendar-outline' },
 ];
 
@@ -52,11 +53,19 @@ function BottomTabBar({ state, navigation }) {
             accessibilityLabel={tab.name}
           >
             <View style={[styles.iconWrap, focused && styles.iconWrapFocused]}>
-              <Ionicons
-                name={focused ? tab.ionicon.replace('-outline', '') : tab.ionicon}
-                size={20}
-                color={focused ? COLORS.white : COLORS.textLight}
-              />
+              {tab.ionicon === 'hanger' ? (
+                <MaterialCommunityIcons
+                  name="hanger"
+                  size={20}
+                  color={focused ? COLORS.white : COLORS.textLight}
+                />
+              ) : (
+                <Ionicons
+                  name={focused ? tab.ionicon.replace('-outline', '') : tab.ionicon}
+                  size={20}
+                  color={focused ? COLORS.white : COLORS.textLight}
+                />
+              )}
             </View>
             <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
               {tab.name.toUpperCase()}
