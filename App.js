@@ -6,7 +6,7 @@
 
 import 'react-native-gesture-handler';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFonts } from 'expo-font';
@@ -26,7 +26,7 @@ import { COLORS }            from './src/constants/theme';
 export default function App() {
   const [storageReady, setStorageReady] = useState(false);
 
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     CormorantGaramond_600SemiBold,
     Jost_400Regular,
     Jost_500Medium,
@@ -39,7 +39,8 @@ export default function App() {
       .catch(() => setStorageReady(true));
   }, []);
 
-  if (!storageReady || !fontsLoaded) {
+  // Allow app to open even if fonts fail to load
+  if (!storageReady || (!fontsLoaded && !fontError)) {
     return (
       <View style={styles.splash}>
         <ActivityIndicator size="large" color={COLORS.primary} />

@@ -1,5 +1,6 @@
 // ─────────────────────────────────────────────
 // OutfitsScreen  (third tab)
+// 2-column grid layout matching Figma spec
 // Fonts loaded globally in App.js
 // ─────────────────────────────────────────────
 
@@ -11,6 +12,7 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -18,6 +20,11 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { getAllOutfits, getAllItems } from '../services/storageService';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const CARD_GAP     = 12;
+const CARD_WIDTH   = (SCREEN_WIDTH - SPACING.lg * 2 - CARD_GAP) / 2;
+const CARD_HEIGHT  = CARD_WIDTH * 1.3;
 
 export default function OutfitsScreen({ navigation }) {
   const [outfits,   setOutfits]   = useState([]);
@@ -29,18 +36,19 @@ export default function OutfitsScreen({ navigation }) {
       Promise.all([getAllOutfits(), getAllItems()]).then(([o, i]) => {
         setOutfits(o);
         setItems(i);
-        const hasFavorites = o.some(outfit => outfit.isFavorite);
-        if (!hasFavorites) setActiveTab('worn');
+        if (!o.some(outfit => outfit.isFavorite)) setActiveTab('worn');
       });
     }, [])
   );
 
   const displayedOutfits = activeTab === 'favorites'
     ? outfits.filter(o => o.isFavorite)
-    : outfits.filter(o => o.wornDates && o.wornDates.length > 0)
+    : outfits
+        .filter(o => o.wornDates && o.wornDates.length > 0)
         .sort((a, b) => new Date(b.wornDates[0]) - new Date(a.wornDates[0]));
 
-  function getOutfitImages(outfit) {
+  // Get up to 4 item images for the outfit card
+  function getOutfitItems(outfit) {
     if (!outfit?.itemIds) return [];
     return outfit.itemIds
       .map(id => items.find(i => i.id === id))
@@ -48,59 +56,47 @@ export default function OutfitsScreen({ navigation }) {
       .slice(0, 4);
   }
 
-  function formatDate(dateStr) {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-
-  function renderOutfit({ item: outfit }) {
-    const outfitItems = getOutfitImages(outfit);
+  function renderOutfit({ item: outfit, index }) {
+    const outfitItems = getOutfitItems(outfit);
+    const tags = outfit.tags?.slice(0, 2) || [];
 
     return (
       <TouchableOpacity
-        style={styles.outfitCard}
+        style={[
+          styles.card,
+          // offset right column slightly for visual rhythm
+          index % 2 === 0 ? { marginRight: CARD_GAP / 2 } : { marginLeft: CARD_GAP / 2 },
+        ]}
         onPress={() => navigation.navigate('OutfitDetail', { outfitId: outfit.id })}
         accessibilityLabel={`View outfit: ${outfit.name}`}
       >
-        <View style={styles.thumbnailGrid}>
-          {[0, 1, 2, 3].map(idx => (
-            <View key={idx} style={styles.thumbnailCell}>
-              {outfitItems[idx] ? (
-                <Image
-                  source={{ uri: outfitItems[idx].imageUri }}
-                  style={styles.thumbnailImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={styles.thumbnailEmpty} />
-              )}
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.outfitInfo}>
-          <Text style={styles.outfitName}>{outfit.name}</Text>
-
+        {/* Tags row at top of card */}
+        {tags.length > 0 && (
           <View style={styles.tagsRow}>
-            {outfit.tags?.slice(0, 3).map(tag => (
+            {tags.map(tag => (
               <View key={tag} style={styles.tagPill}>
                 <Text style={styles.tagText}>{tag.toUpperCase()}</Text>
               </View>
             ))}
           </View>
-
-          {activeTab === 'worn' && outfit.wornDates?.[0] && (
-            <Text style={styles.wornDate}>
-              Last worn {formatDate(outfit.wornDates[0])}
-            </Text>
-          )}
-        </View>
-
-        {outfit.isFavorite && (
-          <Ionicons name="heart" size={18} color={COLORS.primary} style={styles.heartIcon} />
         )}
 
-        <Ionicons name="chevron-forward" size={18} color={COLORS.textLight} />
+        {/* Outfit image — 2×2 grid of pieces */}
+        <View style={styles.imageGrid}>
+          {[0, 1, 2, 3].map(idx => (
+            <View key={idx} style={styles.imageCell}>
+              {outfitItems[idx] ? (
+                <Image
+                  source={{ uri: outfitItems[idx].imageUri }}
+                  style={styles.cellImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={styles.cellEmpty} />
+              )}
+            </View>
+          ))}
+        </View>
       </TouchableOpacity>
     );
   }
@@ -128,27 +124,19 @@ export default function OutfitsScreen({ navigation }) {
       </View>
 
       {/* ── Page title ── */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Outfits</Text>
-      </View>
+      <Text style={styles.headerTitle}>Outfits</Text>
 
       {/* ── Tab bar ── */}
       <View style={styles.tabBar}>
         {[
-          { key: 'favorites', label: 'Favorites',       icon: 'heart-outline' },
-          { key: 'worn',      label: 'Previously Worn', icon: 'time-outline'  },
+          { key: 'favorites', label: 'Favorites' },
+          { key: 'worn',      label: 'Previously Worn' },
         ].map(tab => (
           <TouchableOpacity
             key={tab.key}
             style={[styles.tabBtn, activeTab === tab.key && styles.tabBtnActive]}
             onPress={() => setActiveTab(tab.key)}
           >
-            <Ionicons
-              name={tab.icon}
-              size={14}
-              color={activeTab === tab.key ? COLORS.white : COLORS.textMedium}
-              style={styles.tabIcon}
-            />
             <Text style={[
               styles.tabBtnText,
               activeTab === tab.key && styles.tabBtnTextActive,
@@ -159,13 +147,14 @@ export default function OutfitsScreen({ navigation }) {
         ))}
       </View>
 
-      {/* ── Outfit list ── */}
+      {/* ── 2-column outfit grid ── */}
       <FlatList
         data={displayedOutfits}
         keyExtractor={o => o.id}
         renderItem={renderOutfit}
+        numColumns={2}
         style={styles.list}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={styles.grid}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <Text style={styles.emptyText}>
@@ -185,6 +174,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
 
+  // ── Top nav bar ──────────────────────────────
   topBar: {
     flexDirection:     'row',
     justifyContent:    'space-between',
@@ -200,18 +190,16 @@ const styles = StyleSheet.create({
     color:         COLORS.textDark,
   },
 
-  header: {
+  // ── Title ────────────────────────────────────
+  headerTitle: {
+    fontFamily:        FONTS.medium,
+    fontSize:          34,
+    color:             COLORS.textDark,
     paddingHorizontal: SPACING.lg,
-    paddingTop:        SPACING.xs,
     paddingBottom:     SPACING.md,
   },
 
-  headerTitle: {
-    fontFamily: FONTS.medium,
-    fontSize:   34,
-    color:      COLORS.textDark,
-  },
-
+  // ── Tab bar ──────────────────────────────────
   tabBar: {
     flexDirection:     'row',
     paddingHorizontal: SPACING.lg,
@@ -220,27 +208,19 @@ const styles = StyleSheet.create({
   },
 
   tabBtn: {
-    flex:            1,
-    flexDirection:   'row',
-    alignItems:      'center',
-    justifyContent:  'center',
-    paddingVertical: SPACING.sm,
-    borderRadius:    RADIUS.full,
-    backgroundColor: COLORS.cardBackground,
-    gap:             4,
+    paddingVertical:   8,
+    paddingHorizontal: SPACING.md,
+    borderRadius:      RADIUS.full,
+    backgroundColor:   COLORS.cardBackground,
   },
 
   tabBtnActive: {
     backgroundColor: COLORS.textDark,
   },
 
-  tabIcon: {
-    marginRight: 2,
-  },
-
   tabBtnText: {
     fontFamily:    FONTS.bold,
-    fontSize:      10,
+    fontSize:      11,
     color:         COLORS.textMedium,
     letterSpacing: 0.8,
   },
@@ -249,91 +229,71 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
 
+  // ── Grid ─────────────────────────────────────
   list: {
     flex: 1,
   },
 
-  listContent: {
+  grid: {
     paddingHorizontal: SPACING.lg,
     paddingBottom:     80,
-    gap:               SPACING.md,
   },
 
-  outfitCard: {
+  // ── Outfit card ──────────────────────────────
+  card: {
+    width:           CARD_WIDTH,
+    height:          CARD_HEIGHT,
     backgroundColor: COLORS.cardBackground,
     borderRadius:    RADIUS.lg,
-    padding:         SPACING.md,
-    flexDirection:   'row',
-    alignItems:      'center',
-    gap:             SPACING.md,
+    overflow:        'hidden',
+    marginBottom:    CARD_GAP,
     ...SHADOW.small,
   },
 
-  thumbnailGrid: {
-    width:         90,
-    height:        90,
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    borderRadius:  RADIUS.md,
-    overflow:      'hidden',
-  },
-
-  thumbnailCell: {
-    width:           45,
-    height:          45,
-    backgroundColor: COLORS.inputBackground,
-  },
-
-  thumbnailImage: {
-    width:  '100%',
-    height: '100%',
-  },
-
-  thumbnailEmpty: {
-    flex:            1,
-    backgroundColor: COLORS.inputBackground,
-  },
-
-  outfitInfo: {
-    flex: 1,
-    gap:  SPACING.xs,
-  },
-
-  outfitName: {
-    fontFamily: FONTS.medium,
-    fontSize:   15,
-    color:      COLORS.textDark,
-  },
-
   tagsRow: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    gap:           SPACING.xs,
+    flexDirection:     'row',
+    flexWrap:          'wrap',
+    gap:               6,
+    paddingHorizontal: SPACING.sm,
+    paddingTop:        SPACING.sm,
+    paddingBottom:     4,
   },
 
   tagPill: {
-    backgroundColor:   COLORS.background,
+    backgroundColor:   'rgba(255,255,255,0.9)',
     borderRadius:      RADIUS.full,
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: 8,
     paddingVertical:   3,
   },
 
   tagText: {
-    fontFamily:    FONTS.regular,
+    fontFamily:    FONTS.medium,
     fontSize:      9,
-    color:         COLORS.textMedium,
+    color:         COLORS.textDark,
     letterSpacing: 0.6,
   },
 
-  wornDate: {
-    fontFamily: FONTS.regular,
-    fontSize:   11,
-    color:      COLORS.textLight,
-    fontStyle:  'italic',
+  // 2×2 image grid fills remaining card space
+  imageGrid: {
+    flex:          1,
+    flexDirection: 'row',
+    flexWrap:      'wrap',
   },
 
-  heartIcon: {
-    marginRight: 2,
+  imageCell: {
+    width:           '50%',
+    height:          '50%',
+    backgroundColor: COLORS.cardBackground,
+  },
+
+  cellImage: {
+    width:  '100%',
+    height: '100%',
+  },
+
+  cellEmpty: {
+    flex:            1,
+    backgroundColor: COLORS.inputBackground,
   },
 
   emptyText: {
