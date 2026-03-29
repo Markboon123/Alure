@@ -46,6 +46,8 @@ export default function DiscoverScreen({ navigation, route }) {
   const [savedIds,         setSavedIds]         = useState(new Set());
   const [thumbsDownActive, setThumbsDownActive] = useState(false);
   const [thumbsUpActive,   setThumbsUpActive]   = useState(false);
+  const [feedbackLiked,    setFeedbackLiked]    = useState([]);
+  const [feedbackDisliked, setFeedbackDisliked] = useState([]);
   const flatListRef = useRef(null);
 
   // Generated theme from AI prompt screen (replaces "TODAY'S OUTFITS" + weather)
@@ -58,7 +60,7 @@ export default function DiscoverScreen({ navigation, route }) {
     }, [route.params?.generatedOutfits])
   );
 
-  async function loadData() {
+  async function loadData(likedStyles = [], dislikedStyles = []) {
     setLoading(true);
     // Reset carousel position
     setActiveIndex(0);
@@ -75,12 +77,21 @@ export default function DiscoverScreen({ navigation, route }) {
       if (generatedOutfits && generatedOutfits.length > 0) {
         setOutfits(generatedOutfits);
       } else {
+        const favoriteOutfits = loadedOutfits
+          .filter(o => o.isFavorite)
+          .map(o => ({ name: o.name, tags: o.tags || [] }));
+
+        const userPrefs = user?.styles?.length > 0 ? user.styles : ['Casual', 'Comfy'];
+
         // Normal flow: ask Gemini for today's suggestions
         const aiOutfits = await suggestOutfits({
           items: loadedItems,
           weather: weather,
-          preferences: ['Bold', 'Colorful', 'Comfy'],
+          preferences: userPrefs,
           outfitCount: 3,
+          likedStyles,
+          dislikedStyles,
+          favoriteOutfits,
         });
 
         if (aiOutfits && aiOutfits.length > 0) {
@@ -125,16 +136,18 @@ export default function DiscoverScreen({ navigation, route }) {
   }
 
   function handleThumbsDown() {
-    const nowActive = !thumbsDownActive;
-    setThumbsDownActive(nowActive);
+    const outfit = outfits[activeIndex];
+    const newDisliked = outfit?.tags ? [...feedbackDisliked, ...outfit.tags] : feedbackDisliked;
+    setFeedbackDisliked(newDisliked);
+    setThumbsDownActive(true);
     setThumbsUpActive(false);
-    if (nowActive) {
-      const nextIndex = activeIndex + 1;
-      if (nextIndex < outfits.length) {
-        flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-      } else {
-        Alert.alert('No more outfits', 'Check back tomorrow for fresh suggestions!');
-      }
+
+    const nextIndex = activeIndex + 1;
+    if (nextIndex < outfits.length) {
+      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+    } else {
+      // Regenerate with accumulated feedback
+      loadData(feedbackLiked, newDisliked);
     }
   }
 
@@ -150,12 +163,11 @@ export default function DiscoverScreen({ navigation, route }) {
   }
 
   function handleThumbsUp() {
-    const nowActive = !thumbsUpActive;
-    setThumbsUpActive(nowActive);
+    const outfit = outfits[activeIndex];
+    const newLiked = outfit?.tags ? [...feedbackLiked, ...outfit.tags] : feedbackLiked;
+    setFeedbackLiked(newLiked);
+    setThumbsUpActive(true);
     setThumbsDownActive(false);
-    if (nowActive) {
-      Alert.alert('Noted!', "We'll suggest more outfits like this.");
-    }
   }
 
   async function handleSave() {

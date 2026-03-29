@@ -35,6 +35,9 @@ export async function suggestOutfits({
   weather,
   preferences,
   outfitCount = 3,
+  likedStyles = [],
+  dislikedStyles = [],
+  favoriteOutfits = [],
 }) {
   // Build a compact description of the wardrobe so the prompt stays short
   const wardrobeDescription = items
@@ -43,10 +46,18 @@ export async function suggestOutfits({
     )
     .join('\n');
 
+  const uniqueLiked    = [...new Set(likedStyles)];
+  const uniqueDisliked = [...new Set(dislikedStyles)];
+
   const prompt = `
 You are a personal stylist AI for a college student.
 Weather today: ${weather}
 User style preferences: ${preferences.join(', ')}
+${uniqueLiked.length    > 0 ? `User has liked outfits with these vibes — lean into: ${uniqueLiked.join(', ')}` : ''}
+${uniqueDisliked.length > 0 ? `User has disliked outfits with these vibes — avoid: ${uniqueDisliked.join(', ')}` : ''}
+${favoriteOutfits.length > 0
+  ? `User's saved favourite outfits for style reference:\n${favoriteOutfits.map(o => `- ${o.name}: ${(o.tags || []).join(', ')}`).join('\n')}`
+  : ''}
 
 User's wardrobe:
 ${wardrobeDescription}
