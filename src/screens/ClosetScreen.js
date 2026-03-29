@@ -1,11 +1,8 @@
 // ─────────────────────────────────────────────
-// Closet Screen  (second tab)
-// Displays all wardrobe items in a grid.
-// Features:
-//   - Category filter scroll bar (All/Jackets/Tops/…)
-//   - Sort & filter button (opens FilterModal)
-//   - Tap item → ItemDetailScreen
-//   - + button → AddItemScreen
+// ClosetScreen — redesigned to match Figma spec
+//
+// Before running, install font packages:
+//   npx expo install @expo-google-fonts/cormorant-garamond @expo-google-fonts/jost expo-font
 // ─────────────────────────────────────────────
 
 import React, { useState, useCallback } from 'react';
@@ -18,63 +15,76 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  useFonts,
+  CormorantGaramond_600SemiBold,
+} from '@expo-google-fonts/cormorant-garamond';
+import {
+  Jost_400Regular,
+  Jost_500Medium,
+  Jost_600SemiBold,
+} from '@expo-google-fonts/jost';
 
 import FilterModal from '../components/FilterModal';
-import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { getAllItems } from '../services/storageService';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const GRID_COLUMNS = 2;
-const ITEM_SIZE    = (SCREEN_WIDTH - SPACING.lg * 2 - SPACING.sm) / GRID_COLUMNS;
+const CARD_GAP     = 12;
+const CARD_SIZE    = (SCREEN_WIDTH - SPACING.lg * 2 - CARD_GAP) / GRID_COLUMNS;
 
-// Categories shown in the horizontal scroll bar
-const CATEGORIES = ['All', 'Jackets', 'Tops', 'Bottoms', 'Shoes', 'Accessories'];
+const CATEGORIES = ['All', 'Tops', 'Suits', 'Bottoms', 'Jackets', 'Shoes', 'Accessories'];
 
-// Maps display label → item.category value
 const CATEGORY_MAP = {
-  'All':         null,
-  'Jackets':     'jacket',
-  'Tops':        'top',
-  'Bottoms':     'bottom',
-  'Shoes':       'shoes',
-  'Accessories': 'accessory',
+  All:         null,
+  Tops:        'top',
+  Suits:       'suit',
+  Bottoms:     'bottom',
+  Jackets:     'jacket',
+  Shoes:       'shoes',
+  Accessories: 'accessory',
 };
 
 export default function ClosetScreen({ navigation }) {
-  const [items,           setItems]           = useState([]);
-  const [activeCategory,  setActiveCategory]  = useState('All');
-  const [filterVisible,   setFilterVisible]   = useState(false);
-  const [sortBy,          setSortBy]          = useState('newest');  // newest|mostWorn|leastWorn
-  const [activeTags,      setActiveTags]      = useState([]);
+  const [items,          setItems]          = useState([]);
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [filterVisible,  setFilterVisible]  = useState(false);
+  const [sortBy,         setSortBy]         = useState('newest');
+  const [activeTags,     setActiveTags]     = useState([]);
 
-  // ── Reload items when the tab gains focus ────
+  const [fontsLoaded] = useFonts({
+    CormorantGaramond_600SemiBold,
+    Jost_400Regular,
+    Jost_500Medium,
+    Jost_600SemiBold,
+  });
+
   useFocusEffect(
     useCallback(() => {
       getAllItems().then(setItems);
     }, [])
   );
 
-  // ── Filter by category ────────────────────────
   function filteredItems() {
     let result = [...items];
 
-    // Category filter
     const categoryValue = CATEGORY_MAP[activeCategory];
     if (categoryValue) {
       result = result.filter(i => i.category === categoryValue);
     }
 
-    // Tag filter
     if (activeTags.length > 0) {
       result = result.filter(item =>
         activeTags.some(tag => item.tags?.includes(tag))
       );
     }
 
-    // Sorting
     if (sortBy === 'newest') {
       result.sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
     } else if (sortBy === 'mostWorn') {
@@ -86,76 +96,108 @@ export default function ClosetScreen({ navigation }) {
     return result;
   }
 
-  // ── Render one grid item ──────────────────────
   function renderItem({ item }) {
+    // Show first tag (style label like Casual / Active / Modern)
+    const tag = item.tags?.[0] ?? item.style ?? null;
+
     return (
       <TouchableOpacity
-        style={[styles.gridCell, { width: ITEM_SIZE, height: ITEM_SIZE }]}
+        style={styles.gridCell}
         onPress={() => navigation.navigate('ItemDetail', { item })}
         accessibilityLabel={`View ${item.name}`}
       >
+        {tag && (
+          <View style={styles.tagBadge}>
+            <Text style={styles.tagBadgeText}>{tag.toUpperCase()}</Text>
+          </View>
+        )}
         <Image
           source={{ uri: item.imageUri }}
           style={styles.gridImage}
-          resizeMode="cover"
+          resizeMode="contain"
         />
-
-        {/* Wear count badge */}
-        <View style={styles.wearBadge}>
-          <Text style={styles.wearBadgeText}>×{item.timesWorn || 0}</Text>
-        </View>
       </TouchableOpacity>
+    );
+  }
+
+  if (!fontsLoaded) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator color={COLORS.primary} />
+      </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
 
-      {/* ── Top header ───────────────────────── */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>MY CLOSET</Text>
+      {/* ── Top nav bar: settings | ALURÉ | help ── */}
+      <View style={styles.topBar}>
         <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setFilterVisible(true)}
-          accessibilityLabel="Sort and filter"
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Settings"
         >
-          <Text style={styles.filterButtonText}>⚙ Sort & Filter</Text>
+          <Ionicons name="settings-outline" size={22} color={COLORS.textDark} />
+        </TouchableOpacity>
+
+        <Text style={styles.brandName}>ALURÉ</Text>
+
+        <TouchableOpacity
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Help"
+        >
+          <Ionicons name="help-circle-outline" size={22} color={COLORS.textDark} />
         </TouchableOpacity>
       </View>
 
-      {/* ── Category scroll bar ────────────────── */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryScroll}
-      >
-        {CATEGORIES.map(cat => (
-          <TouchableOpacity
-            key={cat}
-            style={[
-              styles.categoryPill,
-              activeCategory === cat && styles.categoryPillActive,
-            ]}
-            onPress={() => setActiveCategory(cat)}
-          >
-            <Text
-              style={[
-                styles.categoryPillText,
-                activeCategory === cat && styles.categoryPillTextActive,
-              ]}
-            >
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      {/* ── Page title + filter icon ── */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Closet</Text>
+        <TouchableOpacity
+          onPress={() => setFilterVisible(true)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Sort and filter"
+        >
+          <Ionicons name="options-outline" size={24} color={COLORS.textDark} />
+        </TouchableOpacity>
+      </View>
 
-      {/* ── Items grid ───────────────────────── */}
+      {/* ── Category pills ── */}
+      <View style={styles.categoryContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryScroll}
+        >
+          {CATEGORIES.map(cat => (
+            <TouchableOpacity
+              key={cat}
+              style={[
+                styles.categoryPill,
+                activeCategory === cat && styles.categoryPillActive,
+              ]}
+              onPress={() => setActiveCategory(cat)}
+            >
+              <Text
+                style={[
+                  styles.categoryPillText,
+                  activeCategory === cat && styles.categoryPillTextActive,
+                ]}
+              >
+                {cat.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* ── Items grid ── */}
       <FlatList
         data={filteredItems()}
         keyExtractor={i => i.id}
         renderItem={renderItem}
         numColumns={GRID_COLUMNS}
+        style={styles.list}
         contentContainerStyle={styles.grid}
         columnWrapperStyle={styles.gridRow}
         showsVerticalScrollIndicator={false}
@@ -166,16 +208,16 @@ export default function ClosetScreen({ navigation }) {
         }
       />
 
-      {/* ── Add item FAB ──────────────────────── */}
+      {/* ── Add FAB ── */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('AddItem')}
         accessibilityLabel="Add new clothing item"
       >
-        <Text style={styles.fabText}>＋</Text>
+        <Ionicons name="add" size={28} color={COLORS.white} />
       </TouchableOpacity>
 
-      {/* ── Filter modal ─────────────────────── */}
+      {/* ── Filter modal ── */}
       <FilterModal
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
@@ -189,85 +231,110 @@ export default function ClosetScreen({ navigation }) {
   );
 }
 
-// ── Styles ────────────────────────────────────
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex:            1,
+    backgroundColor: COLORS.background,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+
   container: {
     flex:            1,
     backgroundColor: COLORS.background,
   },
 
-  header: {
-    flexDirection:  'row',
-    justifyContent: 'space-between',
-    alignItems:     'center',
+  // ── Top nav bar ──────────────────────────────
+  topBar: {
+    flexDirection:     'row',
+    justifyContent:    'space-between',
+    alignItems:        'center',
     paddingHorizontal: SPACING.lg,
-    paddingTop:     SPACING.md,
-    paddingBottom:  SPACING.sm,
+    paddingVertical:   SPACING.sm + 2,
+  },
+
+  brandName: {
+    fontFamily:    'CormorantGaramond_600SemiBold',
+    fontSize:      22,
+    letterSpacing: 5,
+    color:         COLORS.textDark,
+  },
+
+  // ── Page title row ───────────────────────────
+  header: {
+    flexDirection:     'row',
+    justifyContent:    'space-between',
+    alignItems:        'center',
+    paddingHorizontal: SPACING.lg,
+    paddingTop:        SPACING.xs,
+    paddingBottom:     SPACING.sm,
   },
 
   headerTitle: {
-    fontSize:   FONTS.size2XL,
-    fontWeight: '800',
+    fontFamily: 'Jost_500Medium',
+    fontSize:   34,
     color:      COLORS.textDark,
-    letterSpacing: 2,
   },
 
-  filterButton: {
-    backgroundColor: COLORS.cardBackground,
-    borderRadius:    RADIUS.full,
-    paddingHorizontal: SPACING.md,
-    paddingVertical:   SPACING.xs,
-    ...SHADOW.small,
-  },
-
-  filterButtonText: {
-    fontSize:   FONTS.sizeSM,
-    color:      COLORS.textMedium,
-    fontWeight: '600',
+  // ── Category filter ──────────────────────────
+  categoryContainer: {
+    height:     44,
+    marginBottom: SPACING.sm,
   },
 
   categoryScroll: {
     paddingHorizontal: SPACING.lg,
-    paddingVertical:   SPACING.sm,
-    gap:               SPACING.sm,
+    alignItems:        'center',
+    flexGrow:          0,
   },
 
   categoryPill: {
     borderRadius:      RADIUS.full,
     paddingHorizontal: SPACING.md,
-    paddingVertical:   SPACING.xs,
+    paddingVertical:   7,
     backgroundColor:   COLORS.cardBackground,
     marginRight:       SPACING.sm,
+    alignSelf:         'center',
   },
 
   categoryPillActive: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.textDark,
   },
 
   categoryPillText: {
-    fontSize:   FONTS.sizeSM,
-    color:      COLORS.textMedium,
-    fontWeight: '600',
+    fontFamily:    'Jost_400Regular',
+    fontSize:      11,
+    color:         COLORS.textMedium,
+    letterSpacing: 0.8,
   },
 
   categoryPillTextActive: {
-    color: COLORS.white,
+    fontFamily: 'Jost_600SemiBold',
+    color:      COLORS.white,
+  },
+
+  // ── Grid ────────────────────────────────────
+  list: {
+    flex: 1,
   },
 
   grid: {
     paddingHorizontal: SPACING.lg,
-    paddingBottom:     SPACING.xxl,
+    paddingBottom:     80,
   },
 
   gridRow: {
-    gap:           SPACING.sm,
-    marginBottom:  SPACING.sm,
+    gap:          CARD_GAP,
+    marginBottom: CARD_GAP,
   },
 
   gridCell: {
+    width:           CARD_SIZE,
+    height:          CARD_SIZE * 1.12,
     borderRadius:    RADIUS.md,
     overflow:        'hidden',
     backgroundColor: COLORS.cardBackground,
+    ...SHADOW.small,
   },
 
   gridImage: {
@@ -275,30 +342,34 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 
-  wearBadge: {
-    position:        'absolute',
-    bottom:          SPACING.xs,
-    right:           SPACING.xs,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    borderRadius:    RADIUS.sm,
-    paddingHorizontal: SPACING.xs,
-    paddingVertical:   2,
+  tagBadge: {
+    position:          'absolute',
+    top:               SPACING.sm,
+    left:              SPACING.sm,
+    zIndex:            1,
+    backgroundColor:   'rgba(255,255,255,0.88)',
+    borderRadius:      RADIUS.full,
+    paddingHorizontal: 10,
+    paddingVertical:   4,
   },
 
-  wearBadgeText: {
-    fontSize:   FONTS.sizeXS,
-    color:      COLORS.white,
-    fontWeight: '600',
+  tagBadgeText: {
+    fontFamily:    'Jost_500Medium',
+    fontSize:      9,
+    color:         COLORS.textDark,
+    letterSpacing: 0.8,
   },
 
   emptyText: {
-    textAlign:  'center',
-    color:      COLORS.textLight,
-    fontSize:   FONTS.sizeMD,
-    marginTop:  SPACING.xxl,
+    textAlign:         'center',
+    fontFamily:        'Jost_400Regular',
+    color:             COLORS.textLight,
+    fontSize:          14,
+    marginTop:         SPACING.xxl,
     paddingHorizontal: SPACING.xl,
   },
 
+  // ── FAB ─────────────────────────────────────
   fab: {
     position:        'absolute',
     bottom:          SPACING.xl,
@@ -310,11 +381,5 @@ const styles = StyleSheet.create({
     alignItems:      'center',
     justifyContent:  'center',
     ...SHADOW.medium,
-  },
-
-  fabText: {
-    fontSize:   28,
-    color:      COLORS.white,
-    lineHeight: 34,
   },
 });

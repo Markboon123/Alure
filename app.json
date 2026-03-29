@@ -18,7 +18,8 @@
           "photosPermission": "Aluré needs access to your photos to add clothing items.",
           "cameraPermission": "Aluré needs camera access to photograph clothing items."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "ios": {
       "supportsTablet": true
