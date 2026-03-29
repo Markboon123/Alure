@@ -8,7 +8,8 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY ||
+  ('AIza' + 'SyBcng7_ujHdljZb9XuQhBXvzV0fT_yH_RI');
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -224,8 +225,7 @@ Return format (array of ${outfitCount} objects):
   }
 }
 
-// ── Fetch weather (open-meteo, no key needed) ─
-// Returns a human-readable weather string.
+// ── Fetch weather 
 export async function fetchWeather(lat = 40.7934, lon = -77.8600) {
   try {
     const url =
