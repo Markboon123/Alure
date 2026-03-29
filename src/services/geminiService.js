@@ -11,18 +11,18 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // ⚠️  Replace with your actual Gemini API key.
 // In production, store this in an environment variable
 // and never commit it to source control.
-const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
+const GEMINI_API_KEY = 'AIzaSyB4BKjVQj1BNbRB9XU7PBDXDQE5-zkVGMA';
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 // ── Helper: get the text model ────────────────
 function getTextModel() {
-  return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 }
 
 // ── Helper: get the vision model (image analysis) ─
 function getVisionModel() {
-  return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  return genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 }
 
 // ── Outfit Suggestions ────────────────────────
