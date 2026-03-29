@@ -46,11 +46,13 @@ const Stack = createStackNavigator();
 function TabIcon({ ionicon, label, focused }) {
   return (
     <View style={tabIconStyles.wrapper}>
-      <Ionicons
-        name={ionicon}
-        size={22}
-        color={focused ? COLORS.primary : COLORS.textLight}
-      />
+      <View style={[tabIconStyles.iconWrap, focused && tabIconStyles.iconWrapFocused]}>
+        <Ionicons
+          name={focused ? ionicon.replace('-outline', '') : ionicon}
+          size={20}
+          color={focused ? COLORS.white : COLORS.textLight}
+        />
+      </View>
       <Text style={[tabIconStyles.label, focused && tabIconStyles.labelFocused]}>
         {label.toUpperCase()}
       </Text>
@@ -63,16 +65,27 @@ const tabIconStyles = StyleSheet.create({
     alignItems:     'center',
     justifyContent: 'center',
     paddingTop:     SPACING.xs,
+    width:          72,
+  },
+  iconWrap: {
+    width:          36,
+    height:         36,
+    borderRadius:   18,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  iconWrapFocused: {
+    backgroundColor: COLORS.textDark,
   },
   label: {
-    fontSize:      FONTS.sizeXS,
+    fontSize:      9,
     color:         COLORS.textLight,
     fontFamily:    FONTS.bold,
-    letterSpacing: 0.5,
+    letterSpacing: 0,
     marginTop:     2,
   },
   labelFocused: {
-    color: COLORS.primary,
+    color: COLORS.textDark,
   },
 });
 
@@ -143,7 +156,7 @@ function MainTabs() {
         component={ClosetStack}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon ionicon="grid-outline" label="Closet" focused={focused} />
+            <TabIcon ionicon="shirt-outline" label="Closet" focused={focused} />
           ),
         }}
       />
@@ -152,7 +165,7 @@ function MainTabs() {
         component={OutfitsStack}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon ionicon="shirt-outline" label="Outfits" focused={focused} />
+            <TabIcon ionicon="layers-outline" label="Outfits" focused={focused} />
           ),
         }}
       />
