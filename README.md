@@ -111,4 +111,4 @@ A QR code will appear in your terminal.
 - Amulya Kondru
 - Swayam Kandoi
 - Mark Tangchaisuk
-- Miftaj Rahman
+- Miftaj Chowdhury
